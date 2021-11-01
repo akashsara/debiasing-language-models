@@ -61,7 +61,7 @@ class T5Trainer:
         model = T5ForConditionalGeneration.from_pretrained(self.model_params["MODEL"])
         model = model.to(self.device)
         optimizer = torch.optim.AdamW(params=model.parameters(), lr=self.model_params["LEARNING_RATE"])
-        early_stopping = EarlyStopping(patience=self.model_params["early_stopping_patience"], verbose=False,
+        early_stopping = EarlyStopping(patience=self.model_params["EARLY_STOPPING_PATIENCE"], verbose=False,
                                        path=f'{self.model_params["OUTPUT_PATH"]}/best_model_checkpoint.pt')
         # Training loop
         console.log(f'[Initiating Fine Tuning]...\n')
