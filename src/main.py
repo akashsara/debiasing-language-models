@@ -57,5 +57,9 @@ test_dataloader = DataLoader(
     val_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
 )
 
+# ==============================================================================
+# ====                            MODELING STUFF                            ====
+# ==============================================================================
+
 t5_trainer = T5Trainer(model_params, tokenizer)
 t5_trainer.train_model(train_dataloader, val_dataloader)

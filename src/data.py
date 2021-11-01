@@ -76,7 +76,10 @@ class T5Dataset(Dataset):
             "target_ids": labels.input_ids[0],
         }
 
-    def get_mask_ids(self, sequence_length):
+    def get_mask_ids(self, sequence_length: int) -> list[int]:
+        """
+        Pick self.mask_fraction tokens to mask.
+        """
         num_mask_tokens = int(np.round(sequence_length * self.mask_fraction))
         mask_indices = []
         while len(mask_indices) < num_mask_tokens:
@@ -85,7 +88,14 @@ class T5Dataset(Dataset):
                 mask_indices.append(index)
         return mask_indices
 
-    def add_sentinel_tokens(self, sequence, mask_indices):
+    def add_sentinel_tokens(
+        self, sequence: list[str], mask_indices: list[int]
+    ) -> Tuple[list[str], list[str]]:
+        """
+        Apply sentinel masking 
+        Ref: https://arxiv.org/pdf/1910.10683.pdf (Figure 2)
+        Note: This can probably be improved.
+        """
         masked_input, masked_target = [], []
         input_sentinels = -1
         target_sentinels = -1

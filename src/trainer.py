@@ -13,12 +13,12 @@ torch.manual_seed(0)  # pytorch random seed
 np.random.seed(0)  # numpy random seed
 torch.backends.cudnn.deterministic = True
 
-class T5Trainer:
 
+class T5Trainer:
     def __init__(self, model_params, tokenizer):
         self.model_params = model_params
         self.tokenizer = tokenizer
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def regulariser(self, model):
         return 0
@@ -26,12 +26,14 @@ class T5Trainer:
     def train(self, model, loader, optimizer):
         train_losses = []
         model.train()
-        for _, data in tqdm(enumerate(loader, 0), total=len(loader), desc='Processing batches..'):
-            y = data['target_ids'].to(self.device, dtype=torch.long)
+        for _, data in tqdm(
+            enumerate(loader, 0), total=len(loader), desc="Processing batches.."
+        ):
+            y = data["target_ids"].to(self.device, dtype=torch.long)
             lm_labels = y.clone()
             lm_labels[y == self.tokenizer.pad_token_id] = -100
-            ids = data['source_ids'].to(self.device, dtype=torch.long)
-            mask = data['source_mask'].to(self.device, dtype=torch.long)
+            ids = data["source_ids"].to(self.device, dtype=torch.long)
+            mask = data["source_mask"].to(self.device, dtype=torch.long)
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
             loss = outputs[0] + self.regulariser(model)
@@ -45,12 +47,14 @@ class T5Trainer:
     def validate(self, model, loader):
         validate_losses = []
         model.eval()
-        for _, data in tqdm(enumerate(loader, 0), total=len(loader), desc='Validating batches..'):
-            y = data['target_ids'].to(self.device, dtype=torch.long)
+        for _, data in tqdm(
+            enumerate(loader, 0), total=len(loader), desc="Validating batches.."
+        ):
+            y = data["target_ids"].to(self.device, dtype=torch.long)
             lm_labels = y.clone()
             lm_labels[y == self.tokenizer.pad_token_id] = -100
-            ids = data['source_ids'].to(self.device, dtype=torch.long)
-            mask = data['source_mask'].to(self.device, dtype=torch.long)
+            ids = data["source_ids"].to(self.device, dtype=torch.long)
+            mask = data["source_mask"].to(self.device, dtype=torch.long)
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
             loss = outputs[0]
             validate_losses.append(loss.item())
@@ -60,11 +64,16 @@ class T5Trainer:
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
         model = T5ForConditionalGeneration.from_pretrained(self.model_params["MODEL"])
         model = model.to(self.device)
-        optimizer = torch.optim.AdamW(params=model.parameters(), lr=self.model_params["LEARNING_RATE"])
-        early_stopping = EarlyStopping(patience=self.model_params["EARLY_STOPPING_PATIENCE"], verbose=False,
-                                       path=f'{self.model_params["OUTPUT_PATH"]}/best_model_checkpoint.pt')
+        optimizer = torch.optim.AdamW(
+            params=model.parameters(), lr=self.model_params["LEARNING_RATE"]
+        )
+        early_stopping = EarlyStopping(
+            patience=self.model_params["EARLY_STOPPING_PATIENCE"],
+            verbose=False,
+            path=f'{self.model_params["OUTPUT_PATH"]}/best_model_checkpoint.pt',
+        )
         # Training loop
-        console.log(f'[Initiating Fine Tuning]...\n')
+        console.log(f"[Initiating Fine Tuning]...\n")
         for epoch in range(self.model_params["TRAIN_EPOCHS"]):
             train_losses = self.train(model, training_loader, optimizer)
             valid_losses = self.validate(model, validation_loader)
@@ -88,21 +97,25 @@ class T5Trainer:
 
 
 class EarlyStopping:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
+    """
+    Early stops the training if validation loss doesn't improve after a given patience.
+    """
 
-    def __init__(self, patience=7, verbose=False, delta=0, path='checkpoint.pt', trace_func=print):
+    def __init__(
+        self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print
+    ):
         """
         Args:
             patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
+                Default: 7
             verbose (bool): If True, prints a message for each validation loss improvement.
-                            Default: False
+                Default: False
             delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
+                Default: 0
             path (str): Path for the checkpoint to be saved to.
-                            Default: 'checkpoint.pt'
+                Default: 'checkpoint.pt'
             trace_func (function): trace print function.
-                            Default: print
+                Default: print
         """
         self.patience = patience
         self.verbose = verbose
@@ -123,7 +136,9 @@ class EarlyStopping:
             self.save_checkpoint(val_loss, model)
         elif score < self.best_score + self.delta:
             self.counter += 1
-            self.trace_func(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            self.trace_func(
+                f"EarlyStopping counter: {self.counter} out of {self.patience}"
+            )
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -132,11 +147,12 @@ class EarlyStopping:
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model):
-        '''Saves model when validation loss decrease.'''
+        """
+        Saves model when validation loss decrease.
+        """
         if self.verbose:
             self.trace_func(
-                f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+                f"Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ..."
+            )
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
-
-
