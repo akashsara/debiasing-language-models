@@ -1,10 +1,11 @@
 from transformers import T5Tokenizer
 from trainer import T5Trainer
+from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
 model_params = {
-    "OUTPUT_PATH": "./models",  # output path
+    "OUTPUT_PATH": "../models",  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
     "TRAIN_BATCH_SIZE": 16,  # training batch size
     "VALID_BATCH_SIZE": 16,  # validation batch size
@@ -27,21 +28,21 @@ tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train[:100],
+    train['article'][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 val_dataset = data.T5Dataset(
-    val[:100],
+    val['article'][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 test_dataset = data.T5Dataset(
-    test[:100],
+    test['article'][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
@@ -61,5 +62,8 @@ test_dataloader = DataLoader(
 # ====                            MODELING STUFF                            ====
 # ==============================================================================
 
-t5_trainer = T5Trainer(model_params, tokenizer)
-t5_trainer.train_model(train_dataloader, val_dataloader)
+# t5_trainer = T5Trainer(model_params, tokenizer)
+# t5_trainer.train_model(train_dataloader, val_dataloader)
+
+t5_generator = T5Generator(model_params)
+t5_generator.generate(test_dataloader, 'predictions.csv')
