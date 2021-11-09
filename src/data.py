@@ -47,9 +47,9 @@ class T5Dataset(Dataset):
         # Get item from dataset
         sequence = self.data[idx]
         # Get indices of words to mask
-        mask_indices = self.get_mask_ids(len(sequence))
+        mask_indices = self.get_mask_ids(len(sequence.split()))
         # Apply sentinel masking
-        masked_inputs, masked_target = self.add_sentinel_tokens(sequence, mask_indices)
+        masked_inputs, masked_target = self.add_sentinel_tokens(sequence.split(), mask_indices)
         # Tokenize, Encode, Pad/Truncate & Get Attention Mask
         encoding = self.tokenizer(
             masked_inputs,
