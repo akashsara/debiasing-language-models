@@ -32,9 +32,9 @@ class T5Generator():
 
                 generated_ids = model.generate(input_ids=ids, attention_mask=mask, max_length=256, do_sample=True,
                                                num_return_sequences=1)
-                preds = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=True) for g in
+                preds = [tokenizer.decode(g, skip_special_tokens=False, clean_up_tokenization_spaces=True) for g in
                          generated_ids]
-                target = [tokenizer.decode(t, skip_special_tokens=True, clean_up_tokenization_spaces=True) for t in y]
+                target = [tokenizer.decode(t, skip_special_tokens=False, clean_up_tokenization_spaces=True) for t in y]
 
                 if _ % 1 == 0:
                     console.print(f'Completed {_}')

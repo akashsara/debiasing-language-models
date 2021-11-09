@@ -20,8 +20,34 @@ class T5Trainer:
         self.tokenizer = tokenizer
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def regulariser(self, model):
-        return 0
+    def regulariser(
+        self,
+        logits: torch.Tensor,
+        regularization_terms: list[list[int]],
+        num_classes: int,
+    ):
+        """
+        logits:
+            The predictions from the model for a particular word.
+            Tensor: (batch_size, sequence_length, vocab_size)
+        regularization_terms:
+            A list of lists of token indices.
+            Each sublist corresponds to one word set.
+            For example (Christian, Muslim, Jew).
+            These words are converted into their respective token indices.
+            By doing this, we can easily index through the logits.
+        num_classes:
+            The number of classes for the specific demographic we are debiasing.
+            E.G.: If we debias religion for Christianity, Islam and Judaism.
+            Then, num_classes = 3
+        """
+        loss = 0
+        num_word_sets = len(regularization_terms)
+        for regularization_set in regularization_terms:
+            term_loss = torch.stack([logits[:, :, x] for x in regularization_set], axis=-1)
+            term_loss *= 1 / term_loss.mean(axis=-1)
+            loss += term_loss
+        return (1 / num_word_sets) * loss
 
     def train(self, model, loader, optimizer):
         train_losses = []

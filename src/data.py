@@ -45,11 +45,13 @@ class T5Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         # Get item from dataset
-        sequence = self.data[idx]
+        sequence = self.data[idx].split()
         # Get indices of words to mask
         mask_indices = self.get_mask_ids(len(sequence))
         # Apply sentinel masking
-        masked_inputs, masked_target = self.add_sentinel_tokens(sequence, mask_indices)
+        masked_inputs, masked_target = self.add_sentinel_tokens(
+            sequence, mask_indices
+        )
         # Tokenize, Encode, Pad/Truncate & Get Attention Mask
         encoding = self.tokenizer(
             masked_inputs,
@@ -92,7 +94,7 @@ class T5Dataset(Dataset):
         self, sequence: list[str], mask_indices: list[int]
     ) -> Tuple[list[str], list[str]]:
         """
-        Apply sentinel masking 
+        Apply sentinel masking
         Ref: https://arxiv.org/pdf/1910.10683.pdf (Figure 2)
         Note: This can probably be improved.
         """
