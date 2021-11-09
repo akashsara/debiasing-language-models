@@ -41,13 +41,14 @@ class T5Trainer:
             E.G.: If we debias religion for Christianity, Islam and Judaism.
             Then, num_classes = 3
         """
-        loss = 0
-        num_word_sets = len(regularization_terms)
-        for regularization_set in regularization_terms:
-            term_loss = torch.stack([logits[:, :, x] for x in regularization_set], axis=-1)
-            term_loss *= 1 / term_loss.mean(axis=-1)
-            loss += term_loss
-        return (1 / num_word_sets) * loss
+        # loss = 0
+        # num_word_sets = len(regularization_terms)
+        # for regularization_set in regularization_terms:
+        #     term_loss = torch.stack([logits[:, :, x] for x in regularization_set], axis=-1)
+        #     term_loss *= 1 / term_loss.mean(axis=-1)
+        #     loss += term_loss
+        # return (1 / num_word_sets) * loss
+        return 0
 
     def train(self, model, loader, optimizer):
         train_losses = []
