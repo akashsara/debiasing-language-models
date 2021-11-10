@@ -44,7 +44,9 @@ class T5Trainer:
         # loss = 0
         # num_word_sets = len(regularization_terms)
         # for regularization_set in regularization_terms:
-        #     term_loss = torch.stack([logits[:, :, x] for x in regularization_set], axis=-1)
+        #     term_loss = torch.stack(
+        #         [logits[:, :, x] for x in regularization_set], axis=-1
+        #     )
         #     term_loss *= 1 / term_loss.mean(axis=-1)
         #     loss += term_loss
         # return (1 / num_word_sets) * loss
@@ -63,7 +65,7 @@ class T5Trainer:
             mask = data["source_mask"].to(self.device, dtype=torch.long)
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
-            loss = outputs[0] + self.regulariser(model)
+            loss = outputs[0]  # + self.regulariser(model)
 
             optimizer.zero_grad()
             loss.backward()
@@ -101,7 +103,10 @@ class T5Trainer:
         )
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
-        for epoch in range(self.model_params["TRAIN_EPOCHS"]):
+        for epoch in range(self.model_params["TRAIN_EPOCHS"]): 
+            console.log(
+                f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]"
+            )
             train_losses = self.train(model, training_loader, optimizer)
             valid_losses = self.validate(model, validation_loader)
 
@@ -109,7 +114,8 @@ class T5Trainer:
             train_loss = np.average(train_losses)
             valid_loss = np.average(valid_losses)
 
-            # early_stopping needs the validation loss to check if it has decresed,
+            console.log(f"[Train Loss: {train_loss} \t Val Loss: {valid_loss}]")
+            # early_stopping checks if the validation loss has decreased,
             # and if it has, it will make a checkpoint of the current model
             early_stopping(valid_loss, model)
             if early_stopping.early_stop:
@@ -125,7 +131,8 @@ class T5Trainer:
 
 class EarlyStopping:
     """
-    Early stops the training if validation loss doesn't improve after a given patience.
+    Early stops training if the validation loss doesn't improve
+    after a given patience threshold.
     """
 
     def __init__(
@@ -133,15 +140,21 @@ class EarlyStopping:
     ):
         """
         Args:
-            patience (int): How long to wait after last time validation loss improved.
+            patience (int):
+                How long to wait after last time validation loss improved.
                 Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement.
+            verbose (bool):
+                If True, prints a message for each validation loss improvement.
                 Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+            delta (float):
+                Minimum change in the monitored quantity to qualify as an
+                improvement.
                 Default: 0
-            path (str): Path for the checkpoint to be saved to.
+            path (str):
+                Path for the checkpoint to be saved to.
                 Default: 'checkpoint.pt'
-            trace_func (function): trace print function.
+            trace_func (function):
+                trace print function.
                 Default: print
         """
         self.patience = patience
