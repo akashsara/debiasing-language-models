@@ -56,14 +56,12 @@ class T5Trainer:
                 # For every word in the word group
                 for word in word_group:
                     # If multi-token word, average the probabilities of them all
-                    if len(word) > 1 and i + len(word) < logits.shape[1]:
+                    # Else just take the one probability
+                    if i + len(word) < logits.shape[1]:
                         word_loss = 0
                         for j, k in enumerate(word):
                             word_loss += logits[:, i + j, k]
                             word_loss /= len(word)
-                    # Else just take the one probability
-                    else:
-                        word_loss = logits[:, i, word[0]]
                     word_losses.append(word_loss)
                 # Convert list to a tensor
                 word_losses = torch.stack(word_losses)
@@ -71,9 +69,7 @@ class T5Trainer:
                 word_losses = word_losses / word_losses.mean(axis=0)
                 # Take the mean absolute value of the log of the terms
                 # This term corresponds to L_(R,C) in our formula
-                word_losses = word_losses.log().abs().mean(axis=0)
-                # Add to loss dict
-                term_loss.append(word_losses)
+                term_loss.append(word_losses.log().abs().mean(axis=0))
             # Get the mean loss across the word set.
             # Corresponds to L_R in our formula
             loss.append(torch.stack(term_loss).mean(axis=0))
