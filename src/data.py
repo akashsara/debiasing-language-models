@@ -68,7 +68,7 @@ class T5Dataset(Dataset):
             max_length=self.max_target_length,
             truncation=True,
             is_split_into_words=True,
-            return_attention_mask=False,
+            return_attention_mask=True,
             return_tensors="pt",
         )
         # Return
@@ -76,6 +76,7 @@ class T5Dataset(Dataset):
             "source_ids": encoding.input_ids[0],
             "source_mask": encoding.attention_mask[0],
             "target_ids": labels.input_ids[0],
+            "target_mask": labels.attention_mask[0],
         }
 
     def get_mask_ids(self, sequence_length: int) -> list[int]:

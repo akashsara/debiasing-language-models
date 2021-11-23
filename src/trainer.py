@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 from rich.console import Console
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 from transformers import T5ForConditionalGeneration
 import os
 
@@ -19,38 +20,67 @@ class T5Trainer:
         self.model_params = model_params
         self.tokenizer = tokenizer
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # Convert CSV -> Word Set
+        # If multiple words are in a group for a class, we use the first word.
+        df = pd.read_csv(model_params["WORD_LIST"])
+        df.fillna("N/A", inplace=True)
+        for col in df.columns:
+            df[col] = df[col].apply(lambda x: x.split(" _ ")[0])
+            df[col] = df[col].apply(
+                lambda x: tokenizer.encode(x, add_special_tokens=False)
+            )
+        self.word_set = list(df.T.to_dict(orient="list").values())
+        self.num_classes = df.shape[1]
 
-    def regulariser(
+    def regularizer(
         self,
         logits: torch.Tensor,
-        regularization_terms: list[list[int]],
-        num_classes: int,
+        mask: torch.Tensor,
     ):
         """
         logits:
             The predictions from the model for a particular word.
             Tensor: (batch_size, sequence_length, vocab_size)
-        regularization_terms:
-            A list of lists of token indices.
-            Each sublist corresponds to one word set.
-            For example (Christian, Muslim, Jew).
-            These words are converted into their respective token indices.
-            By doing this, we can easily index through the logits.
-        num_classes:
-            The number of classes for the specific demographic we are debiasing.
-            E.G.: If we debias religion for Christianity, Islam and Judaism.
-            Then, num_classes = 3
+        mask:
+            The mask associated with the inputs.
+            We use this to ensure we don't interfere with padding.
         """
-        # loss = 0
-        # num_word_sets = len(regularization_terms)
-        # for regularization_set in regularization_terms:
-        #     term_loss = torch.stack(
-        #         [logits[:, :, x] for x in regularization_set], axis=-1
-        #     )
-        #     term_loss *= 1 / term_loss.mean(axis=-1)
-        #     loss += term_loss
-        # return (1 / num_word_sets) * loss
-        return 0
+        logits = logits * mask.unsqueeze(-1)
+        loss = []
+        # For every word in sequence_length
+        for i in range(logits.shape[1]):
+            term_loss = []
+            # For every word group in the word set
+            for word_group in self.word_set:
+                word_losses = []
+                # For every word in the word group
+                for word in word_group:
+                    # If multi-token word, average the probabilities of them all
+                    if len(word) > 1 and i + len(word) < logits.shape[1]:
+                        word_loss = 0
+                        for j, k in enumerate(word):
+                            word_loss += logits[:, i + j, k]
+                            word_loss /= len(word)
+                    # Else just take the one probability
+                    else:
+                        word_loss = logits[:, i, word[0]]
+                    word_losses.append(word_loss)
+                # Convert list to a tensor
+                word_losses = torch.stack(word_losses)
+                # Divide each term by the mean of all the terms
+                word_losses = word_losses / word_losses.mean(axis=0)
+                # Take the mean absolute value of the log of the terms
+                # This term corresponds to L_(R,C) in our formula
+                word_losses = word_losses.log().abs().mean(axis=0)
+                # Add to loss dict
+                term_loss.append(word_losses)
+            # Get the mean loss across the word set.
+            # Corresponds to L_R in our formula
+            loss.append(torch.stack(term_loss).mean(axis=0))
+        # Get the mean loss across the sequence length
+        loss = torch.stack(loss).mean(axis=0)
+        # Take the mean here to account for batch size
+        return loss.mean()
 
     def train(self, model, loader, optimizer):
         train_losses = []
@@ -59,13 +89,14 @@ class T5Trainer:
             enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
             y = data["target_ids"].to(self.device, dtype=torch.long)
+            y_mask = data["target_mask"].to(self.device, dtype=torch.long)
             lm_labels = y.clone()
             lm_labels[y == self.tokenizer.pad_token_id] = -100
             ids = data["source_ids"].to(self.device, dtype=torch.long)
             mask = data["source_mask"].to(self.device, dtype=torch.long)
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
-            loss = outputs[0]  # + self.regulariser(model)
+            loss = outputs[0] + self.regularizer(outputs[1], y_mask)
 
             optimizer.zero_grad()
             loss.backward()
@@ -103,10 +134,8 @@ class T5Trainer:
         )
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
-        for epoch in range(self.model_params["TRAIN_EPOCHS"]): 
-            console.log(
-                f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]"
-            )
+        for epoch in range(self.model_params["TRAIN_EPOCHS"]):
+            console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
             valid_losses = self.validate(model, validation_loader)
 
