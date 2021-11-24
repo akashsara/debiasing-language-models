@@ -2,7 +2,7 @@ from datasets import load_dataset
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List, Sequence
 import transformers
 
 
@@ -20,7 +20,7 @@ def load_data() -> Tuple[Dict, Dict, Dict]:
 class T5Dataset(Dataset):
     def __init__(
         self,
-        data: list[str],
+        data: List[str],
         tokenizer: transformers.PreTrainedTokenizer,
         mask_fraction: int,
         max_source_length: int,
@@ -79,7 +79,7 @@ class T5Dataset(Dataset):
             "target_mask": labels.attention_mask[0],
         }
 
-    def get_mask_ids(self, sequence_length: int) -> list[int]:
+    def get_mask_ids(self, sequence_length: int) -> Sequence[int]:
         """
         Pick self.mask_fraction tokens to mask.
         """
@@ -92,8 +92,8 @@ class T5Dataset(Dataset):
         return mask_indices
 
     def add_sentinel_tokens(
-        self, sequence: list[str], mask_indices: list[int]
-    ) -> Tuple[list[str], list[str]]:
+        self, sequence: List[str], mask_indices: List[int]
+    ) -> Tuple[Sequence[str], Sequence[str]]:
         """
         Apply sentinel masking
         Ref: https://arxiv.org/pdf/1910.10683.pdf (Figure 2)
