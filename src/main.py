@@ -17,6 +17,7 @@ model_params = {
     "EARLY_STOPPING_PATIENCE": 1,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 16,  # Batch size to use
+    "WORD_LIST": "../data/religion.csv"
 }
 
 # ==============================================================================
