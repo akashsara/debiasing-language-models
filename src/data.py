@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from typing import Dict, Tuple, List, Sequence
 import transformers
+import pickle
 
 
 def load_data() -> Tuple[Dict, Dict, Dict]:
@@ -12,7 +13,10 @@ def load_data() -> Tuple[Dict, Dict, Dict]:
     later on.
     """
     # https://huggingface.co/datasets/viewer/?dataset=cnn_dailymail
-    dataset = load_dataset("cnn_dailymail", "3.0.0")
+    # dataset = load_dataset("cnn_dailymail", "3.0.0", keep_in_memory=True)
+    # with open("cnn_dailmail_saved.pkl", 'wb') as filewrite:
+    #     pickle.dump(dataset, filewrite)
+    dataset = pickle.load(open("cnn_dailmail_saved.pkl", 'rb'))
     train, val, test = dataset["train"], dataset["validation"], dataset["test"]
     return train, val, test
 
