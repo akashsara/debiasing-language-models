@@ -58,24 +58,41 @@ class T5Trainer:
                 for word in word_group:
                     # If multi-token word, average the probabilities of them all
                     # Else just take the one probability
-                    if i + len(word) < logits.shape[1]:
-                        word_loss = 0
+                    if i + len(word) - 1 < logits.shape[1]:
+                        word_loss_sum = 0
                         for j, k in enumerate(word):
-                            word_loss += logits[:, i + j, k]
-                            word_loss /= len(word)
-                    word_losses.append(word_loss)
+                            word_loss_sum += logits[:, i + j, k]
+                            # print("LOGITS: " + str(logits[3, i + j, k]))
+
+                        word_loss = word_loss_sum/len(word)
+                        # print(type(word_loss))
+                        # print("WORD LOSS SHAPE " + str(word_loss.shape))
+                        word_losses.append(word_loss)
+                        # if np.isnan(word_loss.cpu().data):
+                        #     print("DEBUGGING NAN: " + str(word_loss_sum) + " " + str(len(word)))
+
                 # Convert list to a tensor
+                if len(word_losses) == 0:
+                    continue
+                # print("WORD LOSSES Pre-A: " + str(word_losses))
                 word_losses = torch.stack(word_losses)
+                # print("WORD LOSSES A: " + str(word_losses))
                 # Divide each term by the mean of all the terms
+                # print("WORD LOSS MEAN SHAPE " + str(word_losses.mean(axis=0).shape))
                 word_losses = word_losses / word_losses.mean(axis=0)
+                # print("WORD LOSSES B: " + str(word_losses))
+
                 # Take the mean absolute value of the log of the terms
                 # This term corresponds to L_(R,C) in our formula
                 term_loss.append(word_losses.log().abs().mean(axis=0))
+                # print("WORD LOSSES C: " + str(term_loss))
             # Get the mean loss across the word set.
             # Corresponds to L_R in our formula
             loss.append(torch.stack(term_loss).mean(axis=0))
+            # print("LOSSES D: " + str(term_loss))
         # Get the mean loss across the sequence length
         loss = torch.stack(loss).mean(axis=0)
+        # print("LOSS E: " + str(loss))
         # Take the mean here to account for batch size
         return loss.mean()
 
@@ -93,7 +110,10 @@ class T5Trainer:
             mask = data["source_mask"].to(self.device, dtype=torch.long)
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
-            loss = outputs[0] + self.regularizer(outputs[1], y_mask)
+            regularizer_term = self.regularizer(outputs[1], y_mask)
+            print("Regulariser value: " + str(regularizer_term))
+            loss = outputs[0] + 0.01 * regularizer_term
+            # loss = outputs[0]
 
             optimizer.zero_grad()
             loss.backward()
@@ -135,6 +155,9 @@ class T5Trainer:
             console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
             valid_losses = self.validate(model, validation_loader)
+
+            print("TRAIN LOSS IS : " + str(train_losses))
+            print("VAL LOSS IS : " + str(valid_losses))
 
             # calculate average loss over an epoch
             train_loss = np.average(train_losses)

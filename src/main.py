@@ -29,21 +29,21 @@ tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train["article"][:1000],
+    train["article"][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 val_dataset = data.T5Dataset(
-    val["article"][:1000],
+    val["article"][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 test_dataset = data.T5Dataset(
-    test["article"][:1000],
+    test["article"][:100],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
