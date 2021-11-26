@@ -45,8 +45,9 @@ class T5Trainer:
             The mask associated with the inputs.
             We use this to ensure we don't interfere with padding.
         """
+        mask = torch.where(mask.unsqueeze(-1) == 0, -1e9, 0.0)
+        logits = logits + mask
         logits = torch.nn.functional.softmax(logits, dim=-1)
-        logits = logits * mask.unsqueeze(-1)
         loss = []
         # For every word in sequence_length
         for i in range(logits.shape[1]):
