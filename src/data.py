@@ -16,10 +16,39 @@ def load_data() -> Tuple[Dict, Dict, Dict]:
     # dataset = load_dataset("cnn_dailymail", "3.0.0", keep_in_memory=True)
     # with open("cnn_dailmail_saved.pkl", 'wb') as filewrite:
     #     pickle.dump(dataset, filewrite)
-    dataset = pickle.load(open("cnn_dailmail_saved.pkl", 'rb'))
+    dataset = pickle.load(open("../data/cnn_dailmail_saved.pkl", 'rb'))
     train, val, test = dataset["train"], dataset["validation"], dataset["test"]
     return train, val, test
 
+def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
+    """
+    Loading texts from RedditBias Data
+    """
+    demographics = ["gender", "race", "religion1", "religion2"]
+    train, val, test = [], [], []
+
+    train_text = None
+    valid_text = None
+    test_text = None
+
+    for d in demographics:
+        with open("../data/"+str(d)+"_bias_manual_train.txt") as file:
+            train_text = file.readlines()
+            file.close()
+
+        with open("../data/"+str(d)+"_bias_manual_valid.txt") as file:
+            valid_text = file.readlines()
+            file.close()
+
+        with open("../data/" + str(d) + "_bias_manual_swapped_attr_test.txt") as file:
+            test_text = file.readlines()
+            file.close()
+
+        train += train_text
+        val += valid_text
+        test += test_text
+
+    return train, val, test
 
 class T5Dataset(Dataset):
     def __init__(

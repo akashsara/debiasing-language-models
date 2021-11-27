@@ -68,3 +68,48 @@ t5_trainer.train_model(train_dataloader, val_dataloader)
 
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions.csv")
+
+
+# ==============================================================================
+# ====                            REDDITBIAS                                ====
+# ==============================================================================
+
+train, val, test = data.load_data_reddit()
+
+train_dataset = data.T5Dataset(
+    train,
+    tokenizer,
+    model_params["SENTINEL_MASK_FRACTION"],
+    model_params["MAX_SOURCE_TEXT_LENGTH"],
+    model_params["MAX_TARGET_TEXT_LENGTH"],
+)
+val_dataset = data.T5Dataset(
+    val,
+    tokenizer,
+    model_params["SENTINEL_MASK_FRACTION"],
+    model_params["MAX_SOURCE_TEXT_LENGTH"],
+    model_params["MAX_TARGET_TEXT_LENGTH"],
+)
+test_dataset = data.T5Dataset(
+    test,
+    tokenizer,
+    model_params["SENTINEL_MASK_FRACTION"],
+    model_params["MAX_SOURCE_TEXT_LENGTH"],
+    model_params["MAX_TARGET_TEXT_LENGTH"],
+)
+train_dataloader = DataLoader(
+    train_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
+)
+val_dataloader = DataLoader(
+    val_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
+)
+test_dataloader = DataLoader(
+    val_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
+)
+
+
+t5_trainer = T5Trainer(model_params, tokenizer)
+t5_trainer.train_model(train_dataloader, val_dataloader)
+
+t5_generator = T5Generator(model_params)
+t5_generator.generate(test_dataloader, "predictions_reddit.csv")
