@@ -26,7 +26,7 @@ model_params = {
 
 tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 
-train, val, test = data.load_data()
+'''train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
     train["article"][:100],
@@ -69,7 +69,7 @@ t5_trainer.train_model(train_dataloader, val_dataloader)
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions.csv")
 
-
+'''
 # ==============================================================================
 # ====                            REDDITBIAS                                ====
 # ==============================================================================
