@@ -41,7 +41,7 @@ sys.stdout = stdout
 
 #####################Race#####################################
 
-df_race = pd.read_csv('races.csv', header=None)
+'''df_race = pd.read_csv('races.csv', header=None)
 print(df_race.head(n=11))
 df_list = df_race.T.values.tolist()
 print(df_list)
@@ -51,7 +51,7 @@ black_bias_text = None
 with open("race_black_bias_manual_swapped_attr_test.txt", 'r') as file:
     black_bias_text = file.readlines()
     file.close()
-
+'''
 # white
 '''substitutions = {str(b_word).lower(): str(df_list[1][i]).lower() for i, b_word in enumerate(df_list[0])}
 op_substitutions = {str(df_list[1][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
@@ -117,7 +117,7 @@ sys.stdout = stdout
 '''
 
 #Native american
-substitutions = {str(b_word).lower(): str(df_list[4][i]).lower() for i, b_word in enumerate(df_list[0])}
+'''substitutions = {str(b_word).lower(): str(df_list[4][i]).lower() for i, b_word in enumerate(df_list[0])}
 op_substitutions = {str(df_list[4][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
 merge_subs = {**substitutions, **op_substitutions}
 
@@ -136,3 +136,148 @@ with open("race_native_bias_manual_swapped_attr_test.txt", 'w') as file:
         print(sen.replace('\n', ''))
     file.close()
 sys.stdout = stdout
+'''
+############################ Religion ################################
+
+'''df_religion = pd.read_csv('religion.csv')
+print(df_religion.head(n=11))
+df_list = df_religion.T.values.tolist()
+print(df_list)
+
+islam_bias_text = None
+
+with open("religion_islam_bias_manual_swapped_attr_test.txt", 'r') as file:
+    islam_bias_text = file.readlines()
+    file.close()'''
+
+# Christianity
+'''substitutions = {str(b_word).lower(): str(df_list[1][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[1][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+christianity_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    christianity_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_christianity_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in christianity_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''
+
+# Judaism
+'''substitutions = {str(b_word).lower(): str(df_list[2][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[2][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+judaism_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    judaism_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_judaism_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in judaism_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''
+
+# Hinduism
+
+'''substitutions = {str(b_word).lower(): str(df_list[3][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[3][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+hinduism_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    hinduism_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_hinduism_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in hinduism_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''
+
+# Buddhism
+
+'''substitutions = {str(b_word).lower(): str(df_list[4][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[4][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+buddhism_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    buddhism_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_buddhism_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in buddhism_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''
+
+
+# Confucianism
+
+'''substitutions = {str(b_word).lower(): str(df_list[5][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[5][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+confucianism_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    confucianism_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_confucianism_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in confucianism_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''
+
+
+# Taoism
+
+'''substitutions = {str(b_word).lower(): str(df_list[6][i]).lower() for i, b_word in enumerate(df_list[0])}
+op_substitutions = {str(df_list[6][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+merge_subs = {**substitutions, **op_substitutions}
+
+print(merge_subs)
+
+taoism_bias_text = []
+for i_sen in islam_bias_text:
+    c_sen = i_sen
+    c_sen = replace(c_sen, merge_subs)
+    taoism_bias_text.append(c_sen)
+
+stdout = sys.stdout
+with open("religion_taoism_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in taoism_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout'''

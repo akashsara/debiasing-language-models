@@ -1,16 +1,29 @@
 Islam,Christianity,Judaism,Hinduism,Buddhism,Confucianism,Taoism
-Islam,Christianity,Judaism,Hinduism,Buddhism,Confucianism _ Ruism,Taoism _ Daoism
-Quran _ Koran,Bible,Torah _ Tanakh,Gita _ Veda,Tripitaka,Analects,Tao Te Ching
+Islam,Christianity,Judaism,Hinduism,Buddhism,Confucianism,Taoism
+Islam,Christianity,Judaism,Hinduism,Buddhism,Ruism,Taoism
+Islam,Christianity,Judaism,Hinduism,Buddhism,Ruism,Daoism
+Quran,Bible,Torah,Gita,Tripitaka,Analects,Tao Te Ching
+Koran,Bible,Tanakh,Veda,Tripitaka,Analects,Tao Te Ching
 Muslim,Christian,Jewish,Hindu,Buddhist,Confucianists,Taoist
 islamic,Christian,Jewish,Hinduism,Buddhist,Confucius,Dao
-Mohammed,Jesus,Malachi _ Moses,Ramakrishna _ Krishna,Gautama,Confucius _ Kung Fu-Tzu,Laozi
-Allah,God,Yahweh,Brahman,Gautama,N/A,N/A
-Mecca,Jerusalem,Jerusalem,Kashi _ Varanasi,Lumbini _ Bodh Gaya _ Sarnath _ Kushinagar,Mount Tai,Mount Laojun
-Mosque,Church,Synagogue _ Synagog,Mandir _ Temple,Temple _ Monastery,Temple,Temple
-Jihad,Crusades,Milkhemet Mitzvah,N/A,N/A,N/A,N/A
+Mohammed,Jesus,Malachi,Ramakrishna,Gautama,Confucius,Laozi
+Mohammed,Jesus,Moses,Krishna,Gautama,Kung Fu-Tzu,Laozi
+Allah,God,Yahweh,Brahman,Gautama,,
+Mecca,Jerusalem,Jerusalem,Kashi,Lumbini,Mount Tai,Mount Laojun
+Mecca,Jerusalem,Jerusalem,Varanasi,Bodh Gaya,Mount Tai,Mount Laojun
+Mosque,Church,Synagogue,Mandir,Temple,Temple,Temple
+Mosque,Church,Synagog,Temple,Monastery,Temple,Temple
+Jihad,Crusades,Milkhemet Mitzvah,,,,
 Arabic,Hebrew,Hebrew,Vedic Sanskrit,Pali,Old Chinese,Chinese
-Imam,Priest,Rabbi,Swami,Bhikkhu_Lama _ Guru,N/A,N/A
-Salah,Mass _ Divine Liturgy _ Divine Service _ Eucharist _ Communion,Maarib,Puja,Mantras,N/A,N/A
-Adhan,Bells,Barechu,N/A,N/A,N/A,N/A
-Surah _ Ayat,Verse,Pasukim,Rigveda Samhita,Pāli Canon,N/A,N/A
+Imam,Priest,Rabbi,Swami,Bhikkhu,,
+Imam,Priest,Rabbi,Swami,Lama,,
+Imam,Priest,Rabbi,Swami,Guru,,
+Salah,Mass,Maarib,Puja,Mantras,,
+Salah,Divine Liturgy,Maarib,Puja,Mantras,,
+Salah,Divine Service,Maarib,Puja,Mantras,,
+Salah,Eucharist,Maarib,Puja,Mantras,,
+Salah,Communion,Maarib,Puja,Mantras,,
+Adhan,Bells,Barechu,,,,
+Surah,Verse,Pasukim,Rigveda Samhita,Pāli Canon,,
+Ayat,Verse,Pasukim,Rigveda Samhita,Pāli Canon,,
 Mohammed,Jesus,Moses,Vyasa,Harivarman,Confucius,Laozi
