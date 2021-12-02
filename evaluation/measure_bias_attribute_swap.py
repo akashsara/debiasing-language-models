@@ -135,8 +135,10 @@ def find_anomalies(data):
     return anomalies
 
 
-# calculation of perplexity of religion
+# --------------------------- Religion ---------------------------------------
 
+# calculation of perplexity of religion
+'''
 tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 model = T5ForConditionalGeneration.from_pretrained(model_params["MODEL"])
 
@@ -185,4 +187,60 @@ t_unpaired, p_unpaired = stats.ttest_ind(islam_df['perplexity'].to_list(), taois
 print('Student(unpaired) t-test, after outlier removal: t-value {}, p-value {}'.format(t_unpaired, p_unpaired))
 
 t_paired, p_paired = stats.ttest_rel(islam_df['perplexity'].to_list(), taoism_df['perplexity'].to_list())
+print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))
+'''
+
+
+# ----------------------- Gender ------------------------------------------------
+
+pretrained_gender_model = '../models/gender_model/'
+
+tokenizer = T5Tokenizer.from_pretrained(pretrained_gender_model)
+model = T5ForConditionalGeneration.from_pretrained(pretrained_gender_model)
+
+
+female_df = pd.read_csv('../data/gender_female_bias_manual_swapped_attr_test.txt', header=None)
+male_df = pd.read_csv('../data/gender_male_bias_manual_swapped_attr_test.txt', header=None)
+
+#print(female_df.head(n=10))
+#print(male_df.head(n=10))
+
+female_perplexity = get_perplexity_list(female_df, model, tokenizer)
+male_perplexity = get_perplexity_list(male_df, model, tokenizer)
+
+female_df['perplexity'] = female_perplexity
+male_df['perplexity'] = male_perplexity
+
+print('Instances in demo 1 and 2: {}, {}'.format(len(female_perplexity), len(male_perplexity)))
+
+print('Mean and Std of unfiltered perplexities female - Mean {}, Variance {}'.format(np.mean(female_perplexity), np.std(female_perplexity)))
+print('Mean and Std of unfiltered perplexities male - Mean {}, Variance {}'.format(np.mean(male_perplexity), np.std(male_perplexity)))
+
+assert len(female_perplexity) == len(male_perplexity)
+
+demo1_out = find_anomalies(np.array(female_perplexity))
+demo2_out = find_anomalies(np.array(male_perplexity))
+
+print(demo1_out, demo2_out)
+demo1_in = [d1 for d1 in female_perplexity if d1 not in demo1_out]
+demo2_in = [d2 for d2 in male_perplexity if d2 not in demo2_out]
+
+for i, (p1, p2) in enumerate(zip(female_perplexity, male_perplexity)):
+    if p1 in demo1_out or p2 in demo2_out:
+        female_df.drop(female_df.loc[female_df['perplexity'] == p1].index, inplace=True)
+        male_df.drop(male_df.loc[male_df['perplexity'] == p2].index, inplace=True)
+
+print('Mean and Std of filtered perplexities female - Mean {}, Variance {}'.format(np.mean(female_df['perplexity']), np.std(female_df['perplexity'])))
+print('Mean and Std of filtered perplexities male - Mean {}, Variance {}'.format(np.mean(male_df['perplexity']), np.std(male_df['perplexity'])))
+
+t_value, p_value = stats.ttest_ind(female_perplexity, male_perplexity, equal_var=False)
+
+print('Unfiltered perplexities - T value {} and P value {}'.format(t_value, p_value))
+#print(t_value, p_value)
+
+print("Length after outlier removal: ", len(female_df['perplexity']), len(male_df['perplexity']))
+t_unpaired, p_unpaired = stats.ttest_ind(female_df['perplexity'].to_list(), male_df['perplexity'].to_list(), equal_var=False)
+print('Student(unpaired) t-test, after outlier removal: t-value {}, p-value {}'.format(t_unpaired, p_unpaired))
+
+t_paired, p_paired = stats.ttest_rel(female_df['perplexity'].to_list(), male_df['perplexity'].to_list())
 print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))
