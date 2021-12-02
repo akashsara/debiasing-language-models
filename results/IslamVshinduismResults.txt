@@ -1,0 +1,10 @@
+Instances in demo 1 and 2: 960, 960
+Mean and Std of unfiltered perplexities islam - Mean 4.438401820564695, Variance 7.875308031644507
+Mean and Std of unfiltered perplexities hinduism - Mean 5.096622162826514, Variance 11.937451471662682
+[31.0545322037169, 30.28346501010363, 218.44863423801985, 50.82617530360731, 30.651133664605155] [59.32799261241699, 263.0076534097434, 231.43702449683155, 46.67440376776097, 41.28336769608657]
+Mean and Std of filtered perplexities islam - Mean 4.074541151155865, Variance 3.12702709473715
+Mean and Std of filtered perplexities hinduism - Mean 4.414657346487244, Variance 3.575773157081294
+Unfiltered perplexities - T value -1.4253098560268262 and P value 0.15425555309041544
+Length after outlier removal:  952 952
+Student(unpaired) t-test, after outlier removal: t-value -2.208031039349803, p-value 0.027363151144184313
+Paired t-test, after outlier removal: t-value -3.3272154779658365, p-value 0.0009108017803043137

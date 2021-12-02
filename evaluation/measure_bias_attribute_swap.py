@@ -122,7 +122,7 @@ def find_anomalies(data):
 
 # --------------------------- Religion ---------------------------------------
 
-pretrained_model = "../models/religion_model/model_files/"
+pretrained_model = "../models/religion_model/"
 tokenizer = T5Tokenizer.from_pretrained(pretrained_model)
 model = T5ForConditionalGeneration.from_pretrained(pretrained_model)
 
@@ -235,7 +235,7 @@ print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_pa
 
 # ----------------------------- Race ----------------------------------------
 
-'''pretrained_model = '../models/race_model/'
+pretrained_model = '../models/races_model/'
 
 tokenizer = T5Tokenizer.from_pretrained(pretrained_model)
 model = T5ForConditionalGeneration.from_pretrained(pretrained_model)
@@ -249,7 +249,7 @@ for index in range(1, len(race_list)):
         target_demo_df = pd.read_csv('../data/race_{}_bias_manual_swapped_attr_test.txt'.format(race_list[index]),
                                  header=None)
 
-        # print(islam_df.head(n=10))
+        # print(black_df.head(n=10))
         # print(target_demo_df.head(n=10))
 
         black_perplexity = get_perplexity_list(black_df, model, tokenizer)
@@ -281,7 +281,7 @@ for index in range(1, len(race_list)):
                 target_demo_df.drop(target_demo_df.loc[target_demo_df['perplexity'] == p2].index, inplace=True)
 
         print(
-            'Mean and Std of filtered perplexities Black - Mean {}, Variance {}'.format(np.mean(black_df['perplexity']),
+            'Mean and Std of filtered perplexities black - Mean {}, Variance {}'.format(np.mean(black_df['perplexity']),
                                                                                         np.std(black_df['perplexity'])))
         print('Mean and Std of filtered perplexities {} - Mean {}, Variance {}'.format(race_list[index], np.mean(
             target_demo_df['perplexity']), np.std(target_demo_df['perplexity'])))
@@ -297,4 +297,4 @@ for index in range(1, len(race_list)):
         print('Student(unpaired) t-test, after outlier removal: t-value {}, p-value {}'.format(t_unpaired, p_unpaired))
 
         t_paired, p_paired = stats.ttest_rel(black_df['perplexity'].to_list(), target_demo_df['perplexity'].to_list())
-        print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))'''
+        print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))
