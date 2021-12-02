@@ -4,10 +4,12 @@ from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
+BIAS_TYPE = 'races'
+
 model_params = {
-    "OUTPUT_PATH": "../models",  # output path
+    "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
-    "TRAIN_EPOCHS": 10,  # number of training epochs
+    "TRAIN_EPOCHS": 5,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
     "MAX_SOURCE_TEXT_LENGTH": 64,  # max length of source text
@@ -15,7 +17,7 @@ model_params = {
     "EARLY_STOPPING_PATIENCE": 1,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 32,  # Batch size to use
-    "WORD_LIST": "../data/religion.csv",
+    "WORD_LIST": "../data/{}.csv".format(BIAS_TYPE),
     "REGULARISATION_LAMBDA": 0.1
 }
 
@@ -23,12 +25,14 @@ model_params = {
 # ====                           DATA PREPARATION                           ====
 # ==============================================================================
 
+print(model_params)
+
 tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 
-'''train, val, test = data.load_data()
+train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train["article"][:10000],
+    train["article"][:5000],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
@@ -42,7 +46,7 @@ val_dataset = data.T5Dataset(
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 test_dataset = data.T5Dataset(
-    test["article"][:100],
+    test["article"][:1000],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
@@ -112,3 +116,4 @@ t5_trainer.train_model(train_dataloader, val_dataloader)
 
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions_reddit.csv")
+'''

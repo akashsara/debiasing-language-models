@@ -24,7 +24,8 @@ def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
     """
     Loading texts from RedditBias Data
     """
-    demographics = ["gender", "race", "religion1", "religion2"]
+    # demographics = ["gender", "race", "religion1", "religion2"]
+    demographics = ["religion1", "religion2"]
     train, val, test = [], [], []
 
     train_text = None
