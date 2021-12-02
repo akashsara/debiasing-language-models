@@ -7,17 +7,16 @@ import data
 model_params = {
     "OUTPUT_PATH": "../models",  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
-    "TRAIN_BATCH_SIZE": 16,  # training batch size
-    "VALID_BATCH_SIZE": 16,  # validation batch size
-    "TRAIN_EPOCHS": 50,  # number of training epochs
+    "TRAIN_EPOCHS": 10,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
     "MAX_SOURCE_TEXT_LENGTH": 64,  # max length of source text
-    "MAX_TARGET_TEXT_LENGTH": 64,  # max length of target text
+    "MAX_TARGET_TEXT_LENGTH": 32,  # max length of target text
     "EARLY_STOPPING_PATIENCE": 1,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
-    "BATCH_SIZE": 16,  # Batch size to use
-    "WORD_LIST": "../data/religion.csv"
+    "BATCH_SIZE": 32,  # Batch size to use
+    "WORD_LIST": "../data/religion.csv",
+    "REGULARISATION_LAMBDA": 0.1
 }
 
 # ==============================================================================
@@ -26,10 +25,10 @@ model_params = {
 
 tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 
-train, val, test = data.load_data()
+'''train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train["article"][:100],
+    train["article"][:10000],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
@@ -69,7 +68,7 @@ t5_trainer.train_model(train_dataloader, val_dataloader)
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions.csv")
 
-
+'''
 # ==============================================================================
 # ====                            REDDITBIAS                                ====
 # ==============================================================================

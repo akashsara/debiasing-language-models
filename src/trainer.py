@@ -112,8 +112,8 @@ class T5Trainer:
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
             regularizer_term = self.regularizer(outputs[1], y_mask)
-            print("Regulariser value: " + str(regularizer_term))
-            loss = outputs[0] + 0.01 * regularizer_term
+            # print("Regulariser value: " + str(regularizer_term))
+            loss = outputs[0] + self.model_params["REGULARISATION_LAMBDA"] * regularizer_term
             # loss = outputs[0]
 
             optimizer.zero_grad()
@@ -157,8 +157,8 @@ class T5Trainer:
             train_losses = self.train(model, training_loader, optimizer)
             valid_losses = self.validate(model, validation_loader)
 
-            print("TRAIN LOSS IS : " + str(train_losses))
-            print("VAL LOSS IS : " + str(valid_losses))
+            # print("TRAIN LOSS IS : " + str(train_losses))
+            # print("VAL LOSS IS : " + str(valid_losses))
 
             # calculate average loss over an epoch
             train_loss = np.average(train_losses)
