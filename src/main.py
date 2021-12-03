@@ -46,7 +46,7 @@ val_dataset = data.T5Dataset(
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 test_dataset = data.T5Dataset(
-    test["article"][:1000],
+    test["article"][:5000],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
@@ -66,8 +66,8 @@ test_dataloader = DataLoader(
 # ====                            MODELING STUFF                            ====
 # ==============================================================================
 
-t5_trainer = T5Trainer(model_params, tokenizer)
-t5_trainer.train_model(train_dataloader, val_dataloader)
+# t5_trainer = T5Trainer(model_params, tokenizer)
+# t5_trainer.train_model(train_dataloader, val_dataloader)
 
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions.csv")
