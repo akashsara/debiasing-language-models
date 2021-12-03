@@ -4,10 +4,11 @@ from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
-BIAS_TYPE = 'races'
+BIAS_TYPE = 'religion'
 
 model_params = {
     "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
+    # "OUTPUT_PATH": "../models/",  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 5,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
@@ -59,7 +60,7 @@ val_dataloader = DataLoader(
     val_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
 )
 test_dataloader = DataLoader(
-    val_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
+    test_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
 )
 
 # ==============================================================================

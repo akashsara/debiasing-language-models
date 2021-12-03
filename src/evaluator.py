@@ -2,7 +2,7 @@ import datasets
 import pandas as pd
 import re
 
-PREDICTIONS_FILE = '/Users/dhruvmullick/Projects/debiasing-language-models/models/predictions.csv'
+PREDICTIONS_FILE = '/Users/dhruvmullick/Projects/debiasing-language-models/models/religion/predictions.csv'
 
 
 def preprocess_each_line(line):
@@ -25,6 +25,24 @@ def preprocess_dataframe(df):
     return df
 
 
+def remove_empty_spaces(generated_list_one_case, actual_list_one_case):
+    idx = None
+
+    if "" in generated_list_one_case:
+        idx = generated_list_one_case.index("")
+    if "" in actual_list_one_case:
+        idx = actual_list_one_case.index("")
+
+    if None in generated_list_one_case:
+        idx = generated_list_one_case.index(None)
+    if None in actual_list_one_case:
+        idx = actual_list_one_case.index(None)
+
+    if idx:
+        generated_list_one_case.pop(idx)
+        actual_list_one_case.pop(idx)
+
+
 with open(PREDICTIONS_FILE, 'r') as file_open:
     df = pd.read_csv(file_open)
     preprocess_dataframe(df)
@@ -35,12 +53,15 @@ with open(PREDICTIONS_FILE, 'r') as file_open:
         len_to_check = min(len(generated_list_one_case), len(actual_list_one_case))
         generated_list_one_case = generated_list_one_case[:len_to_check]
         actual_list_one_case = actual_list_one_case[:len_to_check]
+        generated_list_one_case = [x.strip() for x in generated_list_one_case]
+        actual_list_one_case = [x.strip() for x in actual_list_one_case]
+        remove_empty_spaces(generated_list_one_case, actual_list_one_case)
+
         generated_terms.extend(generated_list_one_case)
         actual_terms.extend(actual_list_one_case)
 
+
     assert (len(generated_terms) == len(actual_terms))
-    generated_terms = [x.strip() for x in generated_terms]
-    actual_terms = [x.strip() for x in actual_terms]
     actual_terms_as_list = [[x] for x in actual_terms]
 
     #### Sacre BLEU
