@@ -48,7 +48,9 @@ class T5Generator():
         # Saving the model after training
         path = os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
         model = T5ForConditionalGeneration.from_pretrained(path)
+        # model = T5ForConditionalGeneration.from_pretrained('t5-base')
         tokenizer = T5Tokenizer.from_pretrained(path)
+        # tokenizer = T5Tokenizer.from_pretrained('t5-base')
         model = model.to(self.device)
         # evaluating test dataset
         console.log(f"[Initiating Generation]...\n")

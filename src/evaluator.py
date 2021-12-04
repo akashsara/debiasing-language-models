@@ -2,7 +2,7 @@ import datasets
 import pandas as pd
 import re
 
-PREDICTIONS_FILE = '/Users/dhruvmullick/Projects/debiasing-language-models/models/base/predictions.csv'
+PREDICTIONS_FILE = '/Users/dhruvmullick/Projects/debiasing-language-models/models/base-untrained/predictions.csv'
 
 
 def preprocess_each_line(line):

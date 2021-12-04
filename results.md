@@ -2,6 +2,19 @@
 ####LM Scores
 On 5000 test examples from CNN Daily Mail, we have:
 
+##### No regularisation 
+
+* PTLM no training: 
+  * {'score': 0.151455115266975, 'counts': [14454, 689, 29, 0], 'totals': [135997, 81151, 57369, 43345], 'precisions': [10.628175621521063, 0.8490345159024535, 0.050549948578500585, 0.0011535355865728459], 'bp': 1.0, 'sys_len': 135997, 'ref_len': 65638}
+  * {'meteor': 0.12230863622731737}
+  * {'rouge1': AggregateScore(low=Score(precision=0.20324693536739036, recall=0.2346932299548442, fmeasure=0.20793137344627569), mid=Score(precision=0.20639278674288833, recall=0.237966221184994, fmeasure=0.21109682546068026), high=Score(precision=0.20966287743453188, recall=0.24142572367981294, fmeasure=0.21420582091469892)), 'rouge2': AggregateScore(low=Score(precision=0.010685267772960734, recall=0.011729660084720522, fmeasure=0.010842759229152305), mid=Score(precision=0.011536287530268021, recall=0.012677235461070495, fmeasure=0.011712181062383947), high=Score(precision=0.012439645013261868, recall=0.013602863420059438, fmeasure=0.012601166428886002)), 'rougeL': AggregateScore(low=Score(precision=0.20333250603570405, recall=0.23485168590199465, fmeasure=0.2080921949608649), mid=Score(precision=0.20657671553405155, recall=0.23816237290401837, fmeasure=0.21127006383407237), high=Score(precision=0.20964764146077472, recall=0.24167055627472825, fmeasure=0.2144070019156368)), 'rougeLsum': AggregateScore(low=Score(precision=0.20306091931778303, recall=0.23451595650932042, fmeasure=0.2077743100021213), mid=Score(precision=0.20651408841657773, recall=0.23811208148728943, fmeasure=0.2111885780830483), high=Score(precision=0.20964895377565998, recall=0.2412118028333367, fmeasure=0.21424010850473507))}
+
+* Original PTLM trained with our data
+  * {'score': 4.168692565026856, 'counts': [13828, 734, 120, 9], 'totals': [66763, 11688, 3438, 1353], 'precisions': [20.71207105732217, 6.279945242984257, 3.4904013961605584, 0.6651884700665188], 'bp': 1.0, 'sys_len': 66763, 'ref_len': 65820}
+  * {'meteor': 0.12049249214094557}
+  * {'rouge1': AggregateScore(low=Score(precision=0.22101948101074323, recall=0.22200542117891245, fmeasure=0.21840479033247678), mid=Score(precision=0.2245745736333577, recall=0.22542044398331307, fmeasure=0.2219432703272884), high=Score(precision=0.2280125407993435, recall=0.2290044884681068, fmeasure=0.22540107383411584)), 'rouge2': AggregateScore(low=Score(precision=0.010199689816916326, recall=0.010297964896353458, fmeasure=0.01014951256943994), mid=Score(precision=0.011001664397034348, recall=0.011106824027840823, fmeasure=0.010947409376823808), high=Score(precision=0.01185565138447571, recall=0.011909706460886672, fmeasure=0.011776147245098671)), 'rougeL': AggregateScore(low=Score(precision=0.2214685434364402, recall=0.22228756133411157, fmeasure=0.21894686993794704), mid=Score(precision=0.22467572358039947, recall=0.2255742602079419, fmeasure=0.22205140569824758), high=Score(precision=0.22817775544171434, recall=0.22897150314506257, fmeasure=0.22548842805199712)), 'rougeLsum': AggregateScore(low=Score(precision=0.22127734312517605, recall=0.2221656226357999, fmeasure=0.21875142151689686), mid=Score(precision=0.22457121241597008, recall=0.22544681494931174, fmeasure=0.22195899727447282), high=Score(precision=0.2279587510537585, recall=0.22892281196636674, fmeasure=0.22532817324401153))}
+
+
 ##### 0.1 lambda
 * Races
   * {'score': 4.276985303620987, 'counts': [14266, 751, 115, 9], 'totals': [66872, 11149, 3290, 1351], 'precisions': [21.333293456155044, 6.736030137232039, 3.4954407294832825, 0.6661732050333087], 'bp': 1.0, 'sys_len': 66872, 'ref_len': 66762}
@@ -20,12 +33,6 @@ On 5000 test examples from CNN Daily Mail, we have:
   * {'meteor': 0.11718577866265159}
   * {'rouge1': AggregateScore(low=Score(precision=0.21541567904273884, recall=0.21576945517100396, fmeasure=0.21275821710528986), mid=Score(precision=0.2188914681322388, recall=0.21918299710082206, fmeasure=0.21611890326161518), high=Score(precision=0.2222503089077134, recall=0.22265911647238598, fmeasure=0.21947254297744773)), 'rouge2': AggregateScore(low=Score(precision=0.010170958292732806, recall=0.010348360039457695, fmeasure=0.010156995148559262), mid=Score(precision=0.011001990929541548, recall=0.011174167238081489, fmeasure=0.010967641594874622), high=Score(precision=0.011876593946611813, recall=0.012027003861561225, fmeasure=0.011829968860040313)), 'rougeL': AggregateScore(low=Score(precision=0.21559583636226196, recall=0.2157065318729176, fmeasure=0.21284649584578877), mid=Score(precision=0.2188940244617103, recall=0.21918209486689072, fmeasure=0.21612609379264264), high=Score(precision=0.22214577006955008, recall=0.2223225606601951, fmeasure=0.21932934943673416)), 'rougeLsum': AggregateScore(low=Score(precision=0.21571137708394594, recall=0.21605245588076102, fmeasure=0.2129350844769539), mid=Score(precision=0.21880063250894982, recall=0.21911457769437148, fmeasure=0.2160196946340407), high=Score(precision=0.22207638129866739, recall=0.22236516113898058, fmeasure=0.2192548647854649))}
   
-
-* Original PTLM
-  * {'score': 4.168692565026856, 'counts': [13828, 734, 120, 9], 'totals': [66763, 11688, 3438, 1353], 'precisions': [20.71207105732217, 6.279945242984257, 3.4904013961605584, 0.6651884700665188], 'bp': 1.0, 'sys_len': 66763, 'ref_len': 65820}
-  * {'meteor': 0.12049249214094557}
-  * {'rouge1': AggregateScore(low=Score(precision=0.22101948101074323, recall=0.22200542117891245, fmeasure=0.21840479033247678), mid=Score(precision=0.2245745736333577, recall=0.22542044398331307, fmeasure=0.2219432703272884), high=Score(precision=0.2280125407993435, recall=0.2290044884681068, fmeasure=0.22540107383411584)), 'rouge2': AggregateScore(low=Score(precision=0.010199689816916326, recall=0.010297964896353458, fmeasure=0.01014951256943994), mid=Score(precision=0.011001664397034348, recall=0.011106824027840823, fmeasure=0.010947409376823808), high=Score(precision=0.01185565138447571, recall=0.011909706460886672, fmeasure=0.011776147245098671)), 'rougeL': AggregateScore(low=Score(precision=0.2214685434364402, recall=0.22228756133411157, fmeasure=0.21894686993794704), mid=Score(precision=0.22467572358039947, recall=0.2255742602079419, fmeasure=0.22205140569824758), high=Score(precision=0.22817775544171434, recall=0.22897150314506257, fmeasure=0.22548842805199712)), 'rougeLsum': AggregateScore(low=Score(precision=0.22127734312517605, recall=0.2221656226357999, fmeasure=0.21875142151689686), mid=Score(precision=0.22457121241597008, recall=0.22544681494931174, fmeasure=0.22195899727447282), high=Score(precision=0.2279587510537585, recall=0.22892281196636674, fmeasure=0.22532817324401153))}
-
 
 ##### 0.05 lambda
 * Races
@@ -46,7 +53,7 @@ On 5000 test examples from CNN Daily Mail, we have:
   * 
   
 
-* Original PTLM
+* Original PTLM trained with our data
   * 
   *  
   *
@@ -70,7 +77,7 @@ On 5000 test examples from CNN Daily Mail, we have:
   * 
   
 
-* Original PTLM
+* Original PTLM trained with our data
   * 
   *  
   *
@@ -94,7 +101,7 @@ On 5000 test examples from CNN Daily Mail, we have:
   * 
   
 
-* Original PTLM
+* Original PTLM trained with our data
   * 
   *  
   *
@@ -118,7 +125,7 @@ On 5000 test examples from CNN Daily Mail, we have:
   * 
   
 
-* Original PTLM
+* Original PTLM trained with our data
   * 
   *  
   *

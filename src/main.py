@@ -4,13 +4,14 @@ from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
-BIAS_TYPE = 'religion'
+BIAS_TYPE = 'base-untrained'
 
 REGULARISATION_PARAM = 0.5
 
 model_params = {
-    "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
+    # "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
     # "OUTPUT_PATH": "../models/",  # output path
+    "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 5,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
