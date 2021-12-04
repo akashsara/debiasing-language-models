@@ -6,8 +6,10 @@ import data
 
 BIAS_TYPE = 'religion'
 
+REGULARISATION_PARAM = 0.5
+
 model_params = {
-    "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
+    "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
     # "OUTPUT_PATH": "../models/",  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 5,  # number of training epochs
@@ -19,7 +21,7 @@ model_params = {
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 32,  # Batch size to use
     "WORD_LIST": "../data/{}.csv".format(BIAS_TYPE),
-    "REGULARISATION_LAMBDA": 0.1
+    "REGULARISATION_LAMBDA": REGULARISATION_PARAM
 }
 
 # ==============================================================================
@@ -67,8 +69,8 @@ test_dataloader = DataLoader(
 # ====                            MODELING STUFF                            ====
 # ==============================================================================
 
-# t5_trainer = T5Trainer(model_params, tokenizer)
-# t5_trainer.train_model(train_dataloader, val_dataloader)
+t5_trainer = T5Trainer(model_params, tokenizer)
+t5_trainer.train_model(train_dataloader, val_dataloader)
 
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions.csv")

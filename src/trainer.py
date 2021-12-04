@@ -111,6 +111,7 @@ class T5Trainer:
             mask = data["source_mask"].to(self.device, dtype=torch.long)
 
             outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
+            # print("-----NOT USING REGULARIZER-----")
             regularizer_term = self.regularizer(outputs[1], y_mask)
             # print("Regulariser value: " + str(regularizer_term))
             loss = outputs[0] + self.model_params["REGULARISATION_LAMBDA"] * regularizer_term
