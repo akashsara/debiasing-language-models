@@ -7,7 +7,7 @@ race_list = ["white", "native", "asian", "hispanic"]
 
 # -------------------------------- Result Processing for t_score
 
-'''religion_regu_t_values = []
+religion_regu_t_values = []
 religion_base_t_values = []
 
 for r in religion_list:
@@ -63,11 +63,11 @@ with open("../results/t_score_table.txt", 'w') as file:
         print("{}\t&\t  {} \t & \t {}\\\\".format("Black Vs "+race_list[i].capitalize(), religion_regu_t_values[i], race_base_t_values[i]))
 
 
-'''
+
 
 # ---------------------- Result processing for different Lambda Values ------------------------------
 
-religion_regu_t_values = []
+'''religion_regu_t_values = []
 gender_regu_t_values = []
 race_regu_t_values = []
 
@@ -92,3 +92,4 @@ with open("../results/t_score_table_lambda.txt", 'w') as file:
         for j in range(len(lambda_list)):
             print("\t& {}".format(religion_regu_t_values[i][j]))
         print("\\\\")
+'''

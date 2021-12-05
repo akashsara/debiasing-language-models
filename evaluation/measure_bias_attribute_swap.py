@@ -90,7 +90,7 @@ def get_model_perplexity(df, m, t):
     -------
     Model perplexity
     """
-    model_perplexity = helpers.model_perplexity(df.values[0], m, t)
+    model_perplexity = helpers.model_perplexity(df[0].values, m, t)
     return model_perplexity
 
 
