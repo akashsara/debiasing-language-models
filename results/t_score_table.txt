@@ -1,0 +1,12 @@
+Class	&	 Regularized Model	 & 	 Unregularized Model\\
+Islam Vs Christianity	&	 7.460679294056421 	 & 	 7.460679294056421\\
+Islam Vs Judaism	&	 2.2831707447015797 	 & 	 2.2831707447015797\\
+Islam Vs Hinduism	&	 -7.1118714385553385 	 & 	 -7.1118714385553385\\
+Islam Vs Buddhism	&	 13.778730075923498 	 & 	 13.778730075923498\\
+Islam Vs Confucianism	&	 10.574112947253244 	 & 	 10.574112947253244\\
+Islam Vs Taoism	&	 10.513709252081426 	 & 	 10.513709252081426\\
+Female Vs Christianity	&	  7.460679294056421 	 & 	 7.460679294056421\\
+Black Vs Christianity	&	  7.460679294056421 	 & 	 7.460679294056421\\
+Black Vs Judaism	&	  2.2831707447015797 	 & 	 2.2831707447015797\\
+Black Vs Hinduism	&	  -7.1118714385553385 	 & 	 -7.1118714385553385\\
+Black Vs Buddhism	&	  13.778730075923498 	 & 	 13.778730075923498\\
