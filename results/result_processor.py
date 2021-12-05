@@ -73,12 +73,15 @@ race_regu_t_values = []
 
 lambda_list = ['0.01','0.2','0.5','1']
 
-for lm in lambda_list:
-    for r in religion_list:
+
+for r in religion_list:
+    rel_t = []
+    for lm in lambda_list:
         with open("../results/IslamVs{}Results_{}.txt".format(r, lm), 'r') as file:
             t_val = float(((str((file.readlines())[-1]).split(' ')[6]).replace(',', '')))
-            religion_regu_t_values.append(t_val)
+            rel_t.append(t_val)
             file.close()
+    religion_regu_t_values.append(rel_t)
 
 with open("../results/t_score_table_lambda.txt", 'w') as file:
     sys.stdout = file
@@ -87,5 +90,5 @@ with open("../results/t_score_table_lambda.txt", 'w') as file:
     for i in range(len(religion_list)):
         print("{}".format(religion_list[i].capitalize()))
         for j in range(len(lambda_list)):
-            print("\t& {}".format(religion_regu_t_values[j]))
+            print("\t& {}".format(religion_regu_t_values[i][j]))
         print("\\\\")
