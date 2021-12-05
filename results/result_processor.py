@@ -52,12 +52,12 @@ with open("../results/t_score_table.txt", 'w') as file:
     print("Class\t&\t Regularized Model\t & \t Unregularized Model\\\\")
 
     for i in range(len(religion_list)):
-        print("{}\t&\t {} \t & \t {}\\\\".format("Islam Vs "+religion_list[i].capitalize(), religion_base_t_values[i], religion_base_t_values[i]))
+        print("{}\t&\t {} \t & \t {}\\\\".format("Islam Vs "+religion_list[i].capitalize(), religion_regu_t_values[i], religion_base_t_values[i]))
 
     for i in range(len(gender_list)):
-        print("{}\t&\t  {} \t & \t {}\\\\".format("Female Vs "+religion_list[i].capitalize(), religion_base_t_values[i], religion_base_t_values[i]))
+        print("{}\t&\t  {} \t & \t {}\\\\".format("Female Vs "+gender_list[i].capitalize(), religion_regu_t_values[i], gender_base_t_values[i]))
 
     for i in range(len(race_list)):
-        print("{}\t&\t  {} \t & \t {}\\\\".format("Black Vs "+religion_list[i].capitalize(), religion_base_t_values[i], religion_base_t_values[i]))
+        print("{}\t&\t  {} \t & \t {}\\\\".format("Black Vs "+race_list[i].capitalize(), religion_regu_t_values[i], race_base_t_values[i]))
 
 

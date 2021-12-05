@@ -90,7 +90,7 @@ def get_model_perplexity(df, m, t):
     -------
     Model perplexity
     """
-    model_perplexity = helpers.model_perplexity(df, m, t)
+    model_perplexity = helpers.model_perplexity(df.values[0], m, t)
     return model_perplexity
 
 
@@ -123,7 +123,7 @@ def find_anomalies(data):
 
 # --------------------------- Religion ---------------------------------------
 
-lambda_list = ["0.01", "0.2", "0.5", "1"]
+'''lambda_list = ["0.01", "0.2", "0.5", "1"]
 for lm in lambda_list:
     pretrained_model = "../models/religion_with_reg/{}/model_files/".format(lm)
     tokenizer = T5Tokenizer.from_pretrained(pretrained_model)
@@ -180,7 +180,7 @@ for lm in lambda_list:
             t_paired, p_paired = stats.ttest_rel(islam_df['perplexity'].to_list(), target_demo_df['perplexity'].to_list())
             print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))
 
-
+'''
 # ----------------------- Gender ------------------------------------------------
 
 '''pretrained_gender_model = "../models/base_model/"
@@ -303,3 +303,29 @@ for index in range(1, len(race_list)):
 
         t_paired, p_paired = stats.ttest_rel(black_df['perplexity'].to_list(), target_demo_df['perplexity'].to_list())
         print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))'''
+
+
+# --------------------------- Language Model Perplexity --------------------
+
+demo_list = ["religion", "races", "gender"]
+base_model_path = "../models/base_model/"
+base_tokenizer = T5Tokenizer.from_pretrained(base_model_path)
+base_model = T5ForConditionalGeneration.from_pretrained(base_model_path)
+
+with open("../results/LMP.txt", 'w') as file:
+    sys.stdout = file
+
+    print("LM \t& Size \t& Regularized \t& Unregularized\\\\")
+
+    for dm in demo_list:
+        test_df = pd.read_csv('../data/{}_merged.txt'.format(dm), header=None)
+
+        base_perplexity = get_model_perplexity(test_df, base_model, base_tokenizer)
+
+        test_model_path = "../models/{}_model/".format(dm)
+        test_tokenizer = T5Tokenizer.from_pretrained(test_model_path)
+        test_model = T5ForConditionalGeneration.from_pretrained(test_model_path)
+        test_perplexity = get_model_perplexity(test_df, test_model, test_tokenizer)
+
+        print('{} \t& {} \t& {} \t& {}\\\\'.format(dm, len(test_df), test_perplexity, base_perplexity))
+
