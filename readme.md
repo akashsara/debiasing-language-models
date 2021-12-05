@@ -3,6 +3,9 @@
 Akash Saravanan, Dhruv Mullick, Habibur Rahman
 
 ---
+
+This is our team's submission towards the term project for CMPUT 622 - Privacy and Fairness in Machine Learning, Fall 2021 at the University of Alberta. This work proposes a novel approach towards debiasing multiclass demographics in language models.
+
 ### Abstract:
 
 The majority of current approaches towards debiasing language models consider only a binary demographic such as male vs female or Caucasian vs African-American. While these methods are effective, their target is not representative of the real world. We propose a novel method to debias multiclass demographics. Our technique involves modification of the loss function to add a regularization term. This method can be scaled to any number of classes. We further compare our debiasing method with a base model to display its effectiveness. Finally, we contribute several word lists for the different demographics we consider. These word lists, meant for use in debiasing tasks, are compiled from a combination of prior work and online sources.
