@@ -4,21 +4,21 @@ from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
-BIAS_TYPE = 'base-untrained'
+BIAS_TYPE = 'religion'
 
-REGULARISATION_PARAM = 0.5
+REGULARISATION_PARAM = 0.01
 
 model_params = {
-    # "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
+    "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
     # "OUTPUT_PATH": "../models/",  # output path
-    "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
+    # "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
-    "TRAIN_EPOCHS": 5,  # number of training epochs
+    "TRAIN_EPOCHS": 15,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
     "MAX_SOURCE_TEXT_LENGTH": 64,  # max length of source text
     "MAX_TARGET_TEXT_LENGTH": 32,  # max length of target text
-    "EARLY_STOPPING_PATIENCE": 1,  # number of epochs before stopping training.
+    "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 32,  # Batch size to use
     "WORD_LIST": "../data/{}.csv".format(BIAS_TYPE),
@@ -36,14 +36,14 @@ tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train["article"][:5000],
+    train["article"][:10000],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 val_dataset = data.T5Dataset(
-    val["article"][:100],
+    val["article"][:500],
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],

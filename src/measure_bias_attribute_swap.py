@@ -7,8 +7,8 @@ import numpy as np
 from scipy import stats
 import helper_functions as helpers
 import time
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import seaborn as sns
+# import matplotlib.pyplot as plt
 import logging
 import sys
 from transformers import AutoModelWithLMHead, AutoTokenizer, T5Model, T5ForConditionalGeneration
@@ -240,7 +240,7 @@ with open('../results/Base_FemaleVsMaleResults.txt', 'w') as file:
 
 # ----------------------------- Race ----------------------------------------
 
-'''pretrained_model = "../models/base_model/"
+pretrained_model = "../models/base/model_files"
 
 tokenizer = T5Tokenizer.from_pretrained(pretrained_model)
 model = T5ForConditionalGeneration.from_pretrained(pretrained_model)
@@ -302,13 +302,13 @@ for index in range(1, len(race_list)):
         print('Student(unpaired) t-test, after outlier removal: t-value {}, p-value {}'.format(t_unpaired, p_unpaired))
 
         t_paired, p_paired = stats.ttest_rel(black_df['perplexity'].to_list(), target_demo_df['perplexity'].to_list())
-        print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))'''
+        print('Paired t-test, after outlier removal: t-value {}, p-value {}'.format(t_paired, p_paired))
 
 
 # --------------------------- Language Model Perplexity --------------------
 
 demo_list = ["religion", "races", "gender"]
-base_model_path = "../models/base_model/"
+base_model_path = "../models/base/model_files"
 base_tokenizer = T5Tokenizer.from_pretrained(base_model_path)
 base_model = T5ForConditionalGeneration.from_pretrained(base_model_path)
 
@@ -322,7 +322,7 @@ with open("../results/LMP.txt", 'w') as file:
 
         base_perplexity = get_model_perplexity(test_df, base_model, base_tokenizer)
 
-        test_model_path = "../models/{}_model/".format(dm)
+        test_model_path = "../models/religion/model_files".format(dm)
         test_tokenizer = T5Tokenizer.from_pretrained(test_model_path)
         test_model = T5ForConditionalGeneration.from_pretrained(test_model_path)
         test_perplexity = get_model_perplexity(test_df, test_model, test_tokenizer)

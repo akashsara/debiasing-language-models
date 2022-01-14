@@ -31,6 +31,9 @@ class T5Trainer:
             )
         self.word_set = list(df.T.to_dict(orient="list").values())
         self.num_classes = df.shape[1]
+        param_tensor = torch.ones(self.num_classes)/7
+        torch.nn.init.uniform_(param_tensor)
+        self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
 
     def regularizer(
         self,
@@ -49,6 +52,7 @@ class T5Trainer:
         logits = logits + mask
         logits = torch.nn.functional.softmax(logits, dim=-1)
         loss = []
+
         # For every word in sequence_length
         for i in range(logits.shape[1]):
             term_loss = []
@@ -56,13 +60,13 @@ class T5Trainer:
             for word_group in self.word_set:
                 word_losses = []
                 # For every word in the word group
-                for word in word_group:
+                for class_idx, word in enumerate(word_group):
                     # If multi-token word, average the probabilities of them all
                     # Else just take the one probability
                     if i + len(word) - 1 < logits.shape[1]:
                         word_loss_sum = 0
                         for j, k in enumerate(word):
-                            word_loss_sum += logits[:, i + j, k]
+                            word_loss_sum += self.weighting_params[class_idx] * logits[:, i + j, k]
                             # print("LOGITS: " + str(logits[3, i + j, k]))
 
                         word_loss = word_loss_sum/len(word)
@@ -100,6 +104,7 @@ class T5Trainer:
     def train(self, model, loader, optimizer):
         train_losses = []
         model.train()
+        # print("Pre-Weighting parameters are: {}".format(str(self.weighting_params)))
         for _, data in tqdm(
             enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
@@ -143,8 +148,10 @@ class T5Trainer:
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
         model = T5ForConditionalGeneration.from_pretrained(self.model_params["MODEL"])
         model = model.to(self.device)
+        parameters = [p for p in model.parameters()]
+        parameters.append(self.weighting_params)
         optimizer = torch.optim.AdamW(
-            params=model.parameters(), lr=self.model_params["LEARNING_RATE"]
+            params=parameters, lr=self.model_params["LEARNING_RATE"]
         )
         early_stopping = EarlyStopping(
             patience=self.model_params["EARLY_STOPPING_PATIENCE"],
@@ -156,6 +163,9 @@ class T5Trainer:
         for epoch in range(self.model_params["TRAIN_EPOCHS"]):
             console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
+
+            print("Post-Weighting parameters are: {}".format(str(self.weighting_params)))
+
             valid_losses = self.validate(model, validation_loader)
 
             # print("TRAIN LOSS IS : " + str(train_losses))
