@@ -324,14 +324,15 @@ for rel in range(1, 7):
         biased_text.append((c_sen, diff_words(i_sen, c_sen)))
         if first_item_flag == False:
             base_text.append((i_sen, diff_words(c_sen, i_sen)))
+    if first_item_flag == False:
+        column_combined_biased_text.append(base_text)
     first_item_flag = True
     column_combined_biased_text.append(biased_text)
-column_combined_biased_text.append(base_text)
 print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
-df.to_csv('column_based_religion_data.csv', header = False)
+df.to_csv('column_based_religion_data.csv', header = list(df_religion.columns.values), index=False)
 '''
 
 stdout = sys.stdout
