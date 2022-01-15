@@ -281,3 +281,64 @@ with open("religion_taoism_bias_manual_swapped_attr_test.txt", 'w') as file:
         print(sen.replace('\n', ''))
     file.close()
 sys.stdout = stdout'''
+
+
+def diff_words(sen_a, sen_b):
+    sen_a = sen_a.split(' ')
+    sen_b = sen_b.split(' ')
+    words = []
+    for i in range(len(sen_a)):
+        if sen_a[i] != sen_b[i]:
+            words.append(sen_b[i])
+    return words
+
+#####################################Columned Based Data Preparation#############################################
+df_religion = pd.read_csv('../word_lists/religion.csv')
+print(df_religion.head(n=11))
+df_list = df_religion.T.values.tolist()
+print(df_list)
+
+islam_bias_text = None
+
+with open("../data/religion_islam_bias_manual_swapped_attr_test.txt", 'r') as file:
+    islam_bias_text = file.readlines()
+    file.close()
+
+column_combined_biased_text = []
+
+base_text = []
+first_item_flag = False
+
+for rel in range(1, 7):
+    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs = {**substitutions, **op_substitutions}
+
+    print(merge_subs)
+
+    biased_text = []
+
+    for i_sen in islam_bias_text:
+        c_sen = i_sen
+        c_sen = replace(c_sen, merge_subs)
+        biased_text.append((c_sen, diff_words(i_sen, c_sen)))
+        if first_item_flag == False:
+            base_text.append((i_sen, diff_words(c_sen, i_sen)))
+    first_item_flag = True
+    column_combined_biased_text.append(biased_text)
+column_combined_biased_text.append(base_text)
+print(column_combined_biased_text)
+df = pd.DataFrame(column_combined_biased_text)
+df = df.T
+print(df)
+df.to_csv('column_based_religion_data.csv', header = False)
+'''
+
+stdout = sys.stdout
+with open("religion_christianity_bias_manual_swapped_attr_test.txt", 'w') as file:
+    sys.stdout = file
+    for sen in christianity_bias_text:
+        print(sen.replace('\n', ''))
+    file.close()
+sys.stdout = stdout
+'''
