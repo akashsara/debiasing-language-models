@@ -282,14 +282,13 @@ with open("religion_taoism_bias_manual_swapped_attr_test.txt", 'w') as file:
     file.close()
 sys.stdout = stdout'''
 
-
 def diff_words(sen_a, sen_b):
     sen_a = sen_a.split(' ')
     sen_b = sen_b.split(' ')
     words = []
     for i in range(len(sen_a)):
         if sen_a[i] != sen_b[i]:
-            words.append(sen_b[i])
+            words.append(sen_b[i].translate(str.maketrans('', '', string.punctuation)))
     return words
 
 #####################################Columned Based Data Preparation#############################################
