@@ -5,20 +5,42 @@ from torch.utils.data import Dataset
 from typing import Dict, Tuple, List, Sequence
 import transformers
 import pickle
+import pandas as pd
+from ast import literal_eval as make_tuple
+
+torch.manual_seed(0)  # pytorch random seed
+np.random.seed(0)  # numpy random seed
+torch.backends.cudnn.deterministic = True
+
+
+def get_samples(array, samples_needed):
+    samples = []
+    while len(samples) < samples_needed:
+        if len(samples) == 95:
+            print("Here")
+        i = np.random.randint(0, len(array), 1)
+        array_i = array[i][0]
+        array_i = [x for x in array_i if len(make_tuple(x)[1]) > 0]
+        if len(array_i) < 2:
+            continue
+        array_i_1, array_i_2 = np.random.choice(array_i, size=2, replace=False)
+        array_i_1 = array_i_1.replace("\\n", "")
+        array_i_2 = array_i_2.replace("\\n", "")
+        record = [make_tuple(array_i_1), make_tuple(array_i_2)]
+        samples.append(record)
+    return samples
 
 
 def load_data() -> Tuple[Dict, Dict, Dict]:
-    """
-    Note: We can use a dict or something for easy swapping of datasets
-    later on.
-    """
-    # https://huggingface.co/datasets/viewer/?dataset=cnn_dailymail
-    # dataset = load_dataset("cnn_dailymail", "3.0.0", keep_in_memory=True)
-    # with open("cnn_dailmail_saved.pkl", 'wb') as filewrite:
-    #     pickle.dump(dataset, filewrite)
-    dataset = pickle.load(open("../data/cnn_dailmail_saved.pkl", 'rb'))
-    train, val, test = dataset["train"], dataset["validation"], dataset["test"]
+    df = pd.read_csv('../data/column_based_religion_data.csv')
+    train_array, val_array, test_array = df[:-100].to_numpy(), df[-100:-90].to_numpy(), df[-90:].to_numpy()
+
+    train = get_samples(train_array, 100)
+    val = get_samples(val_array, 10)
+    test = get_samples(test_array, 10)
+
     return train, val, test
+
 
 def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
     """
@@ -33,11 +55,11 @@ def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
     test_text = None
 
     for d in demographics:
-        with open("../data/"+str(d)+"_bias_manual_train.txt") as file:
+        with open("../data/" + str(d) + "_bias_manual_train.txt") as file:
             train_text = file.readlines()
             file.close()
 
-        with open("../data/"+str(d)+"_bias_manual_valid.txt") as file:
+        with open("../data/" + str(d) + "_bias_manual_valid.txt") as file:
             valid_text = file.readlines()
             file.close()
 
@@ -51,14 +73,15 @@ def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
 
     return train, val, test
 
+
 class T5Dataset(Dataset):
     def __init__(
-        self,
-        data: List[str],
-        tokenizer: transformers.PreTrainedTokenizer,
-        mask_fraction: int,
-        max_source_length: int,
-        max_target_length: int,
+            self,
+            data: List[str],
+            tokenizer: transformers.PreTrainedTokenizer,
+            mask_fraction: int,
+            max_source_length: int,
+            max_target_length: int,
     ):
         """
         Args:
@@ -79,16 +102,15 @@ class T5Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         # Get item from dataset
-        sequence = self.data[idx].split()
-        # Get indices of words to mask
-        mask_indices = self.get_mask_ids(len(sequence))
-        # Apply sentinel masking
-        masked_inputs, masked_target = self.add_sentinel_tokens(
-            sequence, mask_indices
-        )
+        pair1, pair2 = self.data[idx]
+        sentence1 = pair1[0]
+        sensitive_word1 = pair1[1][0]
+        sentence2 = pair2[0]
+        sensitive_word2 = pair2[1][0]
+
         # Tokenize, Encode, Pad/Truncate & Get Attention Mask
-        encoding = self.tokenizer(
-            masked_inputs,
+        sentence1_encoding = self.tokenizer(
+            sentence1,
             padding="max_length",
             max_length=self.max_source_length,
             truncation=True,
@@ -96,21 +118,45 @@ class T5Dataset(Dataset):
             return_attention_mask=True,
             return_tensors="pt",
         )
-        labels = self.tokenizer(
-            masked_target,
+        sentence2_encoding = self.tokenizer(
+            sentence2,
             padding="max_length",
-            max_length=self.max_target_length,
+            max_length=self.max_source_length,
             truncation=True,
             is_split_into_words=True,
             return_attention_mask=True,
             return_tensors="pt",
         )
+
+        sensitive_word1_encoding = self.tokenizer(
+            sensitive_word1,
+            padding="max_length",
+            max_length=self.max_source_length,
+            truncation=True,
+            is_split_into_words=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+        sensitive_word2_encoding = self.tokenizer(
+            sensitive_word2,
+            padding="max_length",
+            max_length=self.max_source_length,
+            truncation=True,
+            is_split_into_words=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+
         # Return
         return {
-            "source_ids": encoding.input_ids[0],
-            "source_mask": encoding.attention_mask[0],
-            "target_ids": labels.input_ids[0],
-            "target_mask": labels.attention_mask[0],
+            "sentence1_ids": sentence1_encoding.input_ids[0],
+            "sentence2_ids": sentence2_encoding.input_ids[0],
+            "sentence1_mask": sentence1_encoding.attention_mask[0],
+            "sentence2_mask": sentence2_encoding.attention_mask[0],
+            "sensitive_word1_ids": sensitive_word1_encoding.input_ids[0],
+            "sensitive_word2_ids": sensitive_word2_encoding.input_ids[0],
+            "sensitive_word1_mask": sensitive_word1_encoding.attention_mask[0],
+            "sensitive_word2_mask": sensitive_word2_encoding.attention_mask[0],
         }
 
     def get_mask_ids(self, sequence_length: int) -> Sequence[int]:
@@ -126,7 +172,7 @@ class T5Dataset(Dataset):
         return mask_indices
 
     def add_sentinel_tokens(
-        self, sequence: List[str], mask_indices: List[int]
+            self, sequence: List[str], mask_indices: List[int]
     ) -> Tuple[Sequence[str], Sequence[str]]:
         """
         Apply sentinel masking

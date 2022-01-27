@@ -21,7 +21,7 @@ model_params = {
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 32,  # Batch size to use
-    "WORD_LIST": "../data/{}.csv".format(BIAS_TYPE),
+    "WORD_LIST": "../word_lists/{}.csv".format(BIAS_TYPE),
     "REGULARISATION_LAMBDA": REGULARISATION_PARAM
 }
 
@@ -36,21 +36,21 @@ tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
 train, val, test = data.load_data()
 
 train_dataset = data.T5Dataset(
-    train["article"][:10000],
+    train,
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 val_dataset = data.T5Dataset(
-    val["article"][:500],
+    val,
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],
     model_params["MAX_TARGET_TEXT_LENGTH"],
 )
 test_dataset = data.T5Dataset(
-    test["article"][:5000],
+    test,
     tokenizer,
     model_params["SENTINEL_MASK_FRACTION"],
     model_params["MAX_SOURCE_TEXT_LENGTH"],

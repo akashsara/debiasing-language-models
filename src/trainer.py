@@ -31,7 +31,7 @@ class T5Trainer:
             )
         self.word_set = list(df.T.to_dict(orient="list").values())
         self.num_classes = df.shape[1]
-        param_tensor = torch.ones(self.num_classes)/7
+        param_tensor = torch.ones(self.num_classes)/self.num_classes
         torch.nn.init.uniform_(param_tensor)
         self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
 
