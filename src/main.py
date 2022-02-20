@@ -4,12 +4,12 @@ from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
-BIAS_TYPE = 'religion'
+BIAS_TYPE = "religion"
 
 REGULARISATION_PARAM = 0.01
 
 model_params = {
-    "OUTPUT_PATH": "../models/{}/{}/".format(BIAS_TYPE, REGULARISATION_PARAM),  # output path
+    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/{REGULARISATION_PARAM}/",
     # "OUTPUT_PATH": "../models/",  # output path
     # "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
     "MODEL": "t5-base",  # model_type: t5-base/t5-large
@@ -21,8 +21,8 @@ model_params = {
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "SENTINEL_MASK_FRACTION": 0.15,  # Fraction of a sequence to sentinel mask
     "BATCH_SIZE": 32,  # Batch size to use
-    "WORD_LIST": "../word_lists/{}.csv".format(BIAS_TYPE),
-    "REGULARISATION_LAMBDA": REGULARISATION_PARAM
+    "WORD_LIST": f"../word_lists/{BIAS_TYPE}.csv",
+    "REGULARISATION_LAMBDA": REGULARISATION_PARAM,
 }
 
 # ==============================================================================
@@ -66,17 +66,17 @@ test_dataloader = DataLoader(
     test_dataset, batch_size=model_params["BATCH_SIZE"], shuffle=True, num_workers=0
 )
 
-# ==============================================================================
-# ====                            MODELING STUFF                            ====
-# ==============================================================================
+# # ==============================================================================
+# # ====                            MODELING STUFF                            ====
+# # ==============================================================================
 
 t5_trainer = T5Trainer(model_params, tokenizer)
 t5_trainer.train_model(train_dataloader, val_dataloader)
 
-t5_generator = T5Generator(model_params)
-t5_generator.generate(test_dataloader, "predictions.csv")
+# t5_generator = T5Generator(model_params)
+# t5_generator.generate(test_dataloader, "predictions.csv")
 
-'''
+"""
 # ==============================================================================
 # ====                            REDDITBIAS                                ====
 # ==============================================================================
@@ -120,4 +120,4 @@ t5_trainer.train_model(train_dataloader, val_dataloader)
 
 t5_generator = T5Generator(model_params)
 t5_generator.generate(test_dataloader, "predictions_reddit.csv")
-'''
+"""

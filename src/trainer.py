@@ -31,7 +31,7 @@ class T5Trainer:
             )
         self.word_set = list(df.T.to_dict(orient="list").values())
         self.num_classes = df.shape[1]
-        param_tensor = torch.ones(self.num_classes)/self.num_classes
+        param_tensor = torch.ones(self.num_classes) / self.num_classes
         torch.nn.init.uniform_(param_tensor)
         self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
 
@@ -66,10 +66,12 @@ class T5Trainer:
                     if i + len(word) - 1 < logits.shape[1]:
                         word_loss_sum = 0
                         for j, k in enumerate(word):
-                            word_loss_sum += self.weighting_params[class_idx] * logits[:, i + j, k]
+                            word_loss_sum += (
+                                self.weighting_params[class_idx] * logits[:, i + j, k]
+                            )
                             # print("LOGITS: " + str(logits[3, i + j, k]))
 
-                        word_loss = word_loss_sum/len(word)
+                        word_loss = word_loss_sum / len(word)
                         # print(type(word_loss))
                         # print("WORD LOSS SHAPE " + str(word_loss.shape))
                         word_losses.append(word_loss)
@@ -101,6 +103,19 @@ class T5Trainer:
         # Take the mean here to account for batch size
         return loss.mean()
 
+    def sentence_regularizer(
+        self,
+        sentence1: torch.Tensor,
+        sentence2: torch.Tensor,
+        word1: torch.Tensor,
+        word2: torch.Tensor,
+    ):
+        # TODO: Do we want an absolute loss here?
+        sentence_difference = sentence1 - sentence2
+        word_difference = word2 - word1
+        # TODO: What loss to use? MSE is the simple option
+        return torch.nn.functional.mse_loss(sentence_difference, word_difference)
+
     def train(self, model, loader, optimizer):
         train_losses = []
         model.train()
@@ -108,19 +123,47 @@ class T5Trainer:
         for _, data in tqdm(
             enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
-            y = data["target_ids"].to(self.device, dtype=torch.long)
-            y_mask = data["target_mask"].to(self.device, dtype=torch.long)
-            lm_labels = y.clone()
-            lm_labels[y == self.tokenizer.pad_token_id] = -100
-            ids = data["source_ids"].to(self.device, dtype=torch.long)
-            mask = data["source_mask"].to(self.device, dtype=torch.long)
+            # Setup Data
+            sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
+            sentence1_y_mask = data["sentence1_mask"].to(self.device, dtype=torch.long)
+            sentence2_y = data["sentence2_ids"].to(self.device, dtype=torch.long)
+            sentence2_y_mask = data["sentence2_mask"].to(self.device, dtype=torch.long)
+            word1 = data["sensitive_word1_ids"].to(self.device, dtype=torch.float32)
+            word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
 
-            outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
-            # print("-----NOT USING REGULARIZER-----")
-            regularizer_term = self.regularizer(outputs[1], y_mask)
-            # print("Regulariser value: " + str(regularizer_term))
-            loss = outputs[0] + self.model_params["REGULARISATION_LAMBDA"] * regularizer_term
-            # loss = outputs[0]
+            # Pass through model
+            sentence1_y_hat = model.encoder(
+                input_ids=sentence1_y, attention_mask=sentence1_y_mask
+            )
+            sentence2_y_hat = model.encoder(
+                input_ids=sentence2_y, attention_mask=sentence2_y_mask
+            )
+
+            # TODO: How do we get sentence embeddings here?
+            # We have individual word embeddings only.
+            # Taking the mean right now but alternate methods are a possibility.
+            # Also remember that 1 word = multiple tokens
+
+            # Extracting the hidden states/embedding for each token
+            # last_hidden_state: [batch_size, seq_len, hidden_size]
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state
+
+            # Extract embeddings for each sensitive word
+            word1 = torch.matmul(word1, sentence1_y_hat)
+            word2 = torch.matmul(word2, sentence2_y_hat)
+
+            # Take Mean embedding of each sentence since different sentences
+            # have a different number of tokens
+            sentence1_y_hat = sentence1_y_hat.mean(dim=1)
+            sentence2_y_hat = sentence2_y_hat.mean(dim=1)
+            # Same applies to words
+            word1 = word1.mean(dim=1)
+            word2 = word2.mean(dim=1)
+
+            loss = self.sentence_regularizer(
+                sentence1_y_hat, sentence2_y_hat, word1, word2
+            )
 
             optimizer.zero_grad()
             loss.backward()
@@ -134,13 +177,48 @@ class T5Trainer:
         for _, data in tqdm(
             enumerate(loader, 0), total=len(loader), desc="Validating batches.."
         ):
-            y = data["target_ids"].to(self.device, dtype=torch.long)
-            lm_labels = y.clone()
-            lm_labels[y == self.tokenizer.pad_token_id] = -100
-            ids = data["source_ids"].to(self.device, dtype=torch.long)
-            mask = data["source_mask"].to(self.device, dtype=torch.long)
-            outputs = model(input_ids=ids, attention_mask=mask, labels=lm_labels)
-            loss = outputs[0]
+            # Setup Data
+            sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
+            sentence1_y_mask = data["sentence1_mask"].to(self.device, dtype=torch.long)
+            sentence2_y = data["sentence2_ids"].to(self.device, dtype=torch.long)
+            sentence2_y_mask = data["sentence2_mask"].to(self.device, dtype=torch.long)
+            word1 = data["sensitive_word1_ids"].to(self.device, dtype=torch.float32)
+            word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
+
+            # Pass through model
+            sentence1_y_hat = model.encoder(
+                input_ids=sentence1_y, attention_mask=sentence1_y_mask
+            )
+            sentence2_y_hat = model.encoder(
+                input_ids=sentence2_y, attention_mask=sentence2_y_mask
+            )
+
+            # TODO: How do we get sentence embeddings here?
+            # We have individual word embeddings only.
+            # Taking the mean right now but alternate methods are a possibility.
+            # Also remember that 1 word = multiple tokens
+
+            # Extracting the hidden states/embedding for each token
+            # last_hidden_state: [batch_size, seq_len, hidden_size]
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state
+
+            # Extract embeddings for each sensitive word
+            word1 = torch.matmul(word1, sentence1_y_hat)
+            word2 = torch.matmul(word2, sentence2_y_hat)
+
+            # Take Mean embedding of each sentence since different sentences
+            # have a different number of tokens
+            sentence1_y_hat = sentence1_y_hat.mean(dim=1)
+            sentence2_y_hat = sentence2_y_hat.mean(dim=1)
+            # Same applies to words
+            word1 = word1.mean(dim=1)
+            word2 = word2.mean(dim=1)
+
+            loss = self.sentence_regularizer(
+                sentence1_y_hat, sentence2_y_hat, word1, word2
+            )
+
             validate_losses.append(loss.item())
         return validate_losses
 
@@ -156,7 +234,7 @@ class T5Trainer:
         early_stopping = EarlyStopping(
             patience=self.model_params["EARLY_STOPPING_PATIENCE"],
             verbose=False,
-            path=f'{self.model_params["OUTPUT_PATH"]}/best_model_checkpoint.pt',
+            path=self.model_params["OUTPUT_PATH"]
         )
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
@@ -164,9 +242,12 @@ class T5Trainer:
             console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
 
-            print("Post-Weighting parameters are: {}".format(str(self.weighting_params)))
+            print(
+                "Post-Weighting parameters are: {}".format(str(self.weighting_params))
+            )
 
-            valid_losses = self.validate(model, validation_loader)
+            with torch.no_grad():
+                valid_losses = self.validate(model, validation_loader)
 
             # print("TRAIN LOSS IS : " + str(train_losses))
             # print("VAL LOSS IS : " + str(valid_losses))
@@ -225,8 +306,10 @@ class EarlyStopping:
         self.early_stop = False
         self.val_loss_min = np.Inf
         self.delta = delta
-        self.path = path
         self.trace_func = trace_func
+        if not os.path.exists(path):
+            os.makedirs(path)
+        self.path = os.path.join(path, "best_model_checkpoint.pt")
 
     def __call__(self, val_loss, model):
 

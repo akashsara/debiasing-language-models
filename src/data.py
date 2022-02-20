@@ -114,7 +114,7 @@ class T5Dataset(Dataset):
             padding="max_length",
             max_length=self.max_source_length,
             truncation=True,
-            is_split_into_words=True,
+            is_split_into_words=False,
             return_attention_mask=True,
             return_tensors="pt",
         )
@@ -123,41 +123,50 @@ class T5Dataset(Dataset):
             padding="max_length",
             max_length=self.max_source_length,
             truncation=True,
-            is_split_into_words=True,
+            is_split_into_words=False,
             return_attention_mask=True,
             return_tensors="pt",
         )
 
         sensitive_word1_encoding = self.tokenizer(
             sensitive_word1,
-            padding="max_length",
-            max_length=self.max_source_length,
-            truncation=True,
             is_split_into_words=True,
-            return_attention_mask=True,
+            return_attention_mask=False,
             return_tensors="pt",
         )
         sensitive_word2_encoding = self.tokenizer(
             sensitive_word2,
-            padding="max_length",
-            max_length=self.max_source_length,
-            truncation=True,
             is_split_into_words=True,
-            return_attention_mask=True,
+            return_attention_mask=False,
             return_tensors="pt",
         )
+        
+        sentence1_ids = sentence1_encoding.input_ids[0]
+        sentence2_ids = sentence2_encoding.input_ids[0]
+        sentence1_mask = sentence1_encoding.attention_mask[0]
+        sentence2_mask = sentence2_encoding.attention_mask[0]
+        sensitive_word1_ids = sensitive_word1_encoding.input_ids[0][:-1]
+        sensitive_word2_ids = sensitive_word2_encoding.input_ids[0][:-1]
+        sensitive_word1_mask = self.mask_sensitive_word(sentence1_ids, sensitive_word1_ids)
+        sensitive_word2_mask = self.mask_sensitive_word(sentence2_ids, sensitive_word2_ids)
 
         # Return
         return {
-            "sentence1_ids": sentence1_encoding.input_ids[0],
-            "sentence2_ids": sentence2_encoding.input_ids[0],
-            "sentence1_mask": sentence1_encoding.attention_mask[0],
-            "sentence2_mask": sentence2_encoding.attention_mask[0],
-            "sensitive_word1_ids": sensitive_word1_encoding.input_ids[0],
-            "sensitive_word2_ids": sensitive_word2_encoding.input_ids[0],
-            "sensitive_word1_mask": sensitive_word1_encoding.attention_mask[0],
-            "sensitive_word2_mask": sensitive_word2_encoding.attention_mask[0],
+            "sentence1_ids": sentence1_ids,
+            "sentence2_ids": sentence2_ids,
+            "sentence1_mask": sentence1_mask,
+            "sentence2_mask": sentence2_mask,
+            "sensitive_word1_ids": sensitive_word1_mask,
+            "sensitive_word2_ids": sensitive_word2_mask,
         }
+        
+    def mask_sensitive_word(self, sentence_ids, sensitive_word_ids):
+        sensitive_word_mask = torch.zeros_like(sentence_ids)
+        word_len = len(sensitive_word_ids)
+        for i in range(len(sentence_ids)):
+            if torch.equal(sentence_ids[i:i+word_len], sensitive_word_ids):
+                sensitive_word_mask[i:i+word_len] = 1
+        return sensitive_word_mask
 
     def get_mask_ids(self, sequence_length: int) -> Sequence[int]:
         """
