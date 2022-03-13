@@ -5,7 +5,7 @@ from rich.console import Console
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from transformers import T5ForConditionalGeneration
+from transformers import BertModel
 import os
 
 console = Console(record=True)
@@ -132,10 +132,10 @@ class T5Trainer:
             word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
 
             # Pass through model
-            sentence1_y_hat = model.encoder(
+            sentence1_y_hat = model(
                 input_ids=sentence1_y, attention_mask=sentence1_y_mask
             )
-            sentence2_y_hat = model.encoder(
+            sentence2_y_hat = model(
                 input_ids=sentence2_y, attention_mask=sentence2_y_mask
             )
 
@@ -144,22 +144,25 @@ class T5Trainer:
             # Taking the mean right now but alternate methods are a possibility.
             # Also remember that 1 word = multiple tokens
 
-            # Extracting the hidden states/embedding for each token
-            # last_hidden_state: [batch_size, seq_len, hidden_size]
-            sentence1_y_hat = sentence1_y_hat.last_hidden_state
-            sentence2_y_hat = sentence2_y_hat.last_hidden_state
+            # Extracting the embeddings for each token
+            # last_hidden_state: [batch_size, seq_len, hidden_state]
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state  
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state  
 
             # Extract embeddings for each sensitive word
             word1 = torch.matmul(word1, sentence1_y_hat)
             word2 = torch.matmul(word2, sentence2_y_hat)
 
-            # Take Mean embedding of each sentence since different sentences
+            # Take Mean embedding of each word since different words
             # have a different number of tokens
-            sentence1_y_hat = sentence1_y_hat.mean(dim=1)
-            sentence2_y_hat = sentence2_y_hat.mean(dim=1)
-            # Same applies to words
+            # [batch_size, hidden_state ]
             word1 = word1.mean(dim=1)
             word2 = word2.mean(dim=1)
+
+            # Embedding of CLS token is the sentence embedding: 
+            # [batch_size, hidden_state]
+            sentence1_y_hat = sentence1_y_hat[:, 0, :]
+            sentence2_y_hat = sentence2_y_hat[:, 0, :]
 
             loss = self.sentence_regularizer(
                 sentence1_y_hat, sentence2_y_hat, word1, word2
@@ -186,10 +189,10 @@ class T5Trainer:
             word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
 
             # Pass through model
-            sentence1_y_hat = model.encoder(
+            sentence1_y_hat = model(
                 input_ids=sentence1_y, attention_mask=sentence1_y_mask
             )
-            sentence2_y_hat = model.encoder(
+            sentence2_y_hat = model(
                 input_ids=sentence2_y, attention_mask=sentence2_y_mask
             )
 
@@ -198,22 +201,25 @@ class T5Trainer:
             # Taking the mean right now but alternate methods are a possibility.
             # Also remember that 1 word = multiple tokens
 
-            # Extracting the hidden states/embedding for each token
-            # last_hidden_state: [batch_size, seq_len, hidden_size]
-            sentence1_y_hat = sentence1_y_hat.last_hidden_state
-            sentence2_y_hat = sentence2_y_hat.last_hidden_state
+            # Extracting the embeddings for each token
+            # last_hidden_state: [batch_size, seq_len, hidden_state]
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state  
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state  
 
             # Extract embeddings for each sensitive word
             word1 = torch.matmul(word1, sentence1_y_hat)
             word2 = torch.matmul(word2, sentence2_y_hat)
 
-            # Take Mean embedding of each sentence since different sentences
+            # Take Mean embedding of each word since different words
             # have a different number of tokens
-            sentence1_y_hat = sentence1_y_hat.mean(dim=1)
-            sentence2_y_hat = sentence2_y_hat.mean(dim=1)
-            # Same applies to words
+            # [batch_size, hidden_state ]
             word1 = word1.mean(dim=1)
             word2 = word2.mean(dim=1)
+
+            # Embedding of CLS token is the sentence embedding: 
+            # [batch_size, hidden_state]
+            sentence1_y_hat = sentence1_y_hat[:, 0, :]
+            sentence2_y_hat = sentence2_y_hat[:, 0, :]
 
             loss = self.sentence_regularizer(
                 sentence1_y_hat, sentence2_y_hat, word1, word2
@@ -224,7 +230,7 @@ class T5Trainer:
 
     def train_model(self, training_loader, validation_loader):
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
-        model = T5ForConditionalGeneration.from_pretrained(self.model_params["MODEL"])
+        model = BertModel.from_pretrained(self.model_params["MODEL"])
         model = model.to(self.device)
         parameters = [p for p in model.parameters()]
         parameters.append(self.weighting_params)

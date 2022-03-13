@@ -145,8 +145,9 @@ class T5Dataset(Dataset):
         sentence2_ids = sentence2_encoding.input_ids[0]
         sentence1_mask = sentence1_encoding.attention_mask[0]
         sentence2_mask = sentence2_encoding.attention_mask[0]
-        sensitive_word1_ids = sensitive_word1_encoding.input_ids[0][:-1]
-        sensitive_word2_ids = sensitive_word2_encoding.input_ids[0][:-1]
+        # Ignore CLS & SEP when getting sensitive word ids
+        sensitive_word1_ids = sensitive_word1_encoding.input_ids[0][1:-1] 
+        sensitive_word2_ids = sensitive_word2_encoding.input_ids[0][1:-1]
         sensitive_word1_mask = self.mask_sensitive_word(sentence1_ids, sensitive_word1_ids)
         sensitive_word2_mask = self.mask_sensitive_word(sentence2_ids, sensitive_word2_ids)
 

@@ -1,4 +1,4 @@
-from transformers import T5Tokenizer
+from transformers import BertTokenizer
 from trainer import T5Trainer
 from generator import T5Generator
 from torch.utils.data import DataLoader
@@ -12,7 +12,7 @@ model_params = {
     "OUTPUT_PATH": f"../models/{BIAS_TYPE}/{REGULARISATION_PARAM}/",
     # "OUTPUT_PATH": "../models/",  # output path
     # "OUTPUT_PATH": "../models/{}/".format(BIAS_TYPE),  # output path
-    "MODEL": "t5-base",  # model_type: t5-base/t5-large
+    "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 15,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
@@ -31,7 +31,7 @@ model_params = {
 
 print(model_params)
 
-tokenizer = T5Tokenizer.from_pretrained(model_params["MODEL"])
+tokenizer = BertTokenizer.from_pretrained(model_params["MODEL"])
 
 train, val, test = data.load_data()
 
