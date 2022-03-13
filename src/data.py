@@ -32,8 +32,6 @@ def load_cnn_data(model_params) -> Tuple[Dict, Dict, Dict]:
 def get_samples(array, samples_needed):
     samples = []
     while len(samples) < samples_needed:
-        if len(samples) == 95:
-            print("Here")
         i = np.random.randint(0, len(array), 1)
         array_i = array[i][0]
         array_i = [x for x in array_i if len(make_tuple(x)[1]) > 0]
@@ -50,14 +48,14 @@ def get_samples(array, samples_needed):
 def load_data() -> Tuple[Dict, Dict, Dict]:
     df = pd.read_csv("../data/column_based_religion_data.csv")
     train_array, val_array, test_array = (
-        df[:-100].to_numpy(),
-        df[-100:-90].to_numpy(),
-        df[-90:].to_numpy(),
+        df[:-150].to_numpy(),
+        df[-150:-100].to_numpy(),
+        df[-100:].to_numpy(),
     )
 
-    train = get_samples(train_array, 100)
-    val = get_samples(val_array, 10)
-    test = get_samples(test_array, 10)
+    train = get_samples(train_array, 5000)
+    val = get_samples(val_array, 250)
+    test = get_samples(test_array, 500)
 
     return train, val, test
 

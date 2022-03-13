@@ -1,3 +1,5 @@
+import sys
+
 import transformers
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -22,6 +24,8 @@ class DebiasingTrainer:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # Convert CSV -> Word Set
         # If multiple words are in a group for a class, we use the first word.
+
+        print(sys.path)
         df = pd.read_csv(model_params["WORD_LIST"])
         df.fillna("N/A", inplace=True)
         for col in df.columns:
