@@ -1,3 +1,4 @@
+from cProfile import label
 import json
 import os
 from argparse import ArgumentParser
@@ -23,10 +24,12 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--pretrained-class", default="t5-base", type=str,
                         help="Choose the pretrained model to load.")
-    parser.add_argument("--no-cuda", default=True, action="store_true")
-    parser.add_argument("--batch-size", default=10, type=int)
-    parser.add_argument("--input-file", default="data/stereoset/dev.json",
+    parser.add_argument("--no-cuda", default=False, action="store_true")
+    parser.add_argument("--batch-size", default=64, type=int)
+    parser.add_argument("--input-file", default="data/stereoset/dev_gold.json",
                         type=str, help="Choose the dataset to evaluate on.")
+    parser.add_argument("--output-file", default="predictions.json",
+                        type=str, help="Choose the output file name.")
     parser.add_argument("--output-dir", default="predictions/", type=str,
                         help="Choose the output directory to store predictions in.")
     parser.add_argument("--intrasentence-model",
@@ -36,16 +39,16 @@ def parse_args():
                         help="Load a pretrained model for the intrasentence task.")
 
     parser.add_argument("--intersentence-model",
-                        default="ModelNSP", type=str, help="Choose a intersentence model architecture.")
+                        default="T5LM", type=str, help="Choose a intersentence model architecture.")
     parser.add_argument("--intersentence-load-path", default=None, 
                         help="Load a pretrained model for the intersentence task.")
 
     parser.add_argument("--tokenizer", default="T5Tokenizer", type=str)
     parser.add_argument("--max-seq-length", type=int, default=64)
     parser.add_argument("--unconditional_start_token",
-                        default="<|endoftext|>", type=str, help="Beginning of sequence token.")
+                        default="<pad>", type=str, help="Beginning of sequence token.")
     parser.add_argument("--skip-intersentence",
-                        default=True, action="store_true", help="Skip the intersentence task.")
+                        default=False, action="store_true", help="Skip the intersentence task.")
     parser.add_argument("--skip-intrasentence",
                         default=False, action="store_true", help="SKip the intrasentence task.")
     parser.add_argument("--small", default=False, action="store_true")
@@ -53,9 +56,9 @@ def parse_args():
 
 
 class BiasEvaluator(object):
-    def __init__(self, pretrained_class="t5-base", no_cuda=False, batch_size=51, input_file="data/bias.json",
-                 intrasentence_model="T5LM", intrasentence_load_path=None, intersentence_model="ModelNSP",
-                 intersentence_load_path=None, tokenizer="T5Tokenizer", unconditional_start_token="<|endoftext|>",
+    def __init__(self, pretrained_class="t5-base", no_cuda=False, batch_size=64, input_file="data/bias.json", output_file="predictions.json",
+                 intrasentence_model="T5LM", intrasentence_load_path=None, intersentence_model="T5LM",
+                 intersentence_load_path=None, tokenizer="T5Tokenizer", unconditional_start_token="<pad>",
                  skip_intrasentence=False, skip_intersentence=False, max_seq_length=64, small=False,
                  output_dir="predictions/"):
         print(f"Loading {input_file}...")
@@ -98,89 +101,54 @@ class BiasEvaluator(object):
         print(f"{Fore.LIGHTCYAN_EX}CUDA:{Style.RESET_ALL} {self.cuda}")
         print("---------------------------------------------------------------")
 
-    def make_dataloader(self, sentences, tokenizer, sentinel_mask_fraction=0.0, max_source_text_len=0, max_target_text_len=0):
-        eval_dataset = data.T5Dataset(
-            sentences,
-            tokenizer,
-            sentinel_mask_fraction,
-            max_source_text_len,
-            max_target_text_len, )
-        eval_dataloader = DataLoader(
-            eval_dataset, batch_size=64, shuffle=True, num_workers=0
-        )
-        return eval_dataloader
-    
     def evaluate_intrasentence(self):
         print()
         print(
             f"{Fore.LIGHTRED_EX}Evaluating bias on intrasentence tasks...{Style.RESET_ALL}")
 
         model = getattr(models, self.INTRASENTENCE_MODEL)(
-        self.PRETRAINED_CLASS).to(self.device)
+            self.PRETRAINED_CLASS).to(self.device)
         model.eval()
 
-        # start_token = torch.tensor(self.tokenizer.encode(
-        #     self.UNCONDITIONAL_START_TOKEN)).to(self.device).unsqueeze(0)
+        start_token = torch.tensor(self.tokenizer.encode(
+            self.UNCONDITIONAL_START_TOKEN)[:-1]).to(self.device).unsqueeze(0)
         
-        # ids = start_token["source_ids"].to(self.device, dtype=torch.long)
-        # mask = start_token["source_mask"].to(self.device, dtype=torch.long)
         
-        # generated_ids = model.generate(input_ids=ids, attention_mask=mask, max_length=256, do_sample=True,
-        #                                        num_return_sequences=1)
-        # preds = [tokenizer.decode(g, skip_special_tokens=False, clean_up_tokenization_spaces=True) for g in
-        #                  generated_ids]
+        initial_token_probabilities = model(input_ids=start_token, labels=start_token).logits
+        initial_token_probabilities = torch.softmax(
+            initial_token_probabilities, dim=-1)
 
-        # initial_token_probabilities = model(start_token)
-        # initial_token_probabilities = torch.softmax(
-        #     initial_token_probabilities[0], dim=-1)
-
-        # # ensure that our batch size is 1, and that our initial token isn't split into subwords.
-        # assert initial_token_probabilities.shape[0] == 1
-        # assert initial_token_probabilities.shape[1] == 1
+        # ensure that our batch size is 1, and that our initial token isn't split into subwords.
+        assert initial_token_probabilities.shape[0] == 1
+        assert initial_token_probabilities.shape[1] == 1
 
         clusters = self.dataloader.get_intrasentence_examples()
         predictions = []
-        sentences = []
-        sentence_ids = []
-        for cluster in clusters:
+        for cluster in tqdm(clusters):
             for sentence in cluster.sentences:
-                sentences.append([sentence.sentence, "None"])
-                sentence_ids.append(sentence.ID)
-        
-        eval_dataloader = self.make_dataloader(sentences=sentences, tokenizer=self.tokenizer, sentinel_mask_fraction=0.13, max_source_text_len=64, max_target_text_len=32)
-        
-        with torch.no_grad():
-            for _, data in enumerate(eval_dataloader, 0):
                 probabilities = {}
-                
-                ids = data['sentence1_ids'].to(self.device, dtype=torch.long)
-                mask = data['sentence1_mask'].to(self.device, dtype=torch.long)
-
-                generated_ids = model.generate(input_ids=ids, attention_mask=mask, max_length=256, do_sample=True,
-                                               num_return_sequences=1)
-                preds = [self.tokenizer.decode(g, skip_special_tokens=False, clean_up_tokenization_spaces=True) for g in
-                         generated_ids]
-                
-                # joint_sentence_probability = []
-                # tokens_tensor = torch.tensor(
-                #     ids).to(self.device).unsqueeze(0)
-                # output = torch.softmax(model(tokens_tensor)[0], dim=-1)
-                # for idx in range(1, len(ids)):
-                #     joint_sentence_probability.append(
-                #         output[0, idx-1, ids[idx]].item())
+                tokens = self.tokenizer.encode(sentence.sentence)
+                joint_sentence_probability = [
+                    initial_token_probabilities[0, 0, tokens[0]].item()]
+                tokens_tensor = torch.tensor(
+                    tokens).to(self.device).unsqueeze(0)
+                output = torch.softmax(model(input_ids = tokens_tensor, labels = tokens_tensor).logits, dim=-1)
+                for idx in range(1, len(tokens)):
+                    joint_sentence_probability.append(
+                        output[0, idx-1, tokens[idx]].item())
 
                 # ensure that we have a probability on every token
-                assert len(ids) == len(generated_ids)
+                assert len(tokens) == len(joint_sentence_probability)
 
-                score = np.sum([np.log2(i) for i in generated_ids]) 
-                score /= len(preds)
+                score = np.sum([np.log2(i) for i in joint_sentence_probability]) 
+                score /= len(joint_sentence_probability)
                 score = np.power(2, score)
 
-                probabilities['id'] = sentence_ids[_]
+                probabilities['id'] = sentence.ID
                 probabilities['score'] = score
 
                 predictions.append(probabilities)
-
+        print("Prediction Length of Intrasentence: ", len(predictions))
         return predictions
 
     def evaluate_intersentence(self):
@@ -191,15 +159,15 @@ class BiasEvaluator(object):
             model = amp.initialize(model, opt_level="O3")
 
         start_token = torch.tensor(self.tokenizer.encode(
-            self.UNCONDITIONAL_START_TOKEN)).to(self.device).unsqueeze(0)
-        initial_token_probabilities = model(start_token)
+            self.UNCONDITIONAL_START_TOKEN)[:-1]).to(self.device).unsqueeze(0)
+        initial_token_probabilities = model(input_ids = start_token, labels = start_token).logits
         initial_token_probabilities = torch.softmax(
-            initial_token_probabilities[0], dim=-1)
+            initial_token_probabilities, dim=-1)
         assert initial_token_probabilities.shape[0] == 1
         assert initial_token_probabilities.shape[1] == 1
 
         model.eval()
-        clusters = self.dataloader.get_intersentence_examples()[:1000]
+        clusters = self.dataloader.get_intersentence_examples()
         predictions = []
 
         # iterate over triplets (pro, anti, neg)
@@ -236,10 +204,10 @@ class BiasEvaluator(object):
                 positions_tensor = torch.tensor(
                     positions).unsqueeze(0).to(self.device)
 
-                logits = model(tokens_tensor)
+                logits = model(input_ids = tokens_tensor, labels = tokens_tensor).logits
 
                 # we use the 0th item since that corresponds to the prediction scores over vocab tokens
-                output = torch.softmax(logits[0], dim=-1)
+                output = torch.softmax(logits, dim=-1)
 
                 # iterate over the context and setup those probabilities.
                 for idx in range(1, context_length):
@@ -259,8 +227,8 @@ class BiasEvaluator(object):
                     tokens).to(self.device).unsqueeze(0)
                 no_context_probability = [
                     initial_token_probabilities[0, 0, tokens[0]].item()]
-                logits = model(tokens_tensor)
-                output = torch.softmax(logits[0], dim=-1)
+                logits = model(input_ids = tokens_tensor, labels = tokens_tensor).logits
+                output = torch.softmax(logits, dim=-1)
 
                 # setup the probability for the sentence if we didn't provide the context
                 for idx in range(1, len(tokens)):
@@ -354,6 +322,6 @@ if __name__ == "__main__":
     evaluator = BiasEvaluator(**vars(args))
     results = evaluator.evaluate()
     output_file = os.path.join(
-        args.output_dir, f"predictions_{args.pretrained_class}_{args.intersentence_model}_{args.intrasentence_model}.json")
-    with open(output_file, "w") as f:
+        args.output_dir, args.output_file)
+    with open(output_file, "w+") as f:
         json.dump(results, f, indent=2)
