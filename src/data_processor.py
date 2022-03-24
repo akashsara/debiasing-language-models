@@ -2,6 +2,9 @@ import pandas as pd
 import sys
 import string
 import re
+import inflect
+
+infl = inflect.engine()
 
 # remove punctuations from a sentence
 def remove_punctuations(sen):
@@ -335,8 +338,8 @@ def diff_words(sen_a, sen_b):
                 words.append(sen_b[i].translate(str.maketrans('', '', string.punctuation)))
         except:
             print("Exception:")
-            print(sen_a)
-            print(sen_b)
+            #print(sen_a)
+            #print(sen_b)
     return words
 
 #####################################Columned Based Data Preparation#############################################
@@ -362,6 +365,11 @@ for rel in range(1, 7):
     op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
     merge_subs = {**substitutions, **op_substitutions}
     merge_subs.update({**op_substitutions, **substitutions})
+    
+    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs.update({**substitutions, **op_substitutions})
+    merge_subs.update({**op_substitutions, **substitutions})    
 
     print(merge_subs)
 
@@ -377,7 +385,7 @@ for rel in range(1, 7):
         column_combined_biased_text.append(base_text)
     first_item_flag = True
     column_combined_biased_text.append(biased_text)
-print(column_combined_biased_text)
+#print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
@@ -418,6 +426,11 @@ for rel in range(1, 2):
     merge_subs = {**substitutions, **op_substitutions}
     merge_subs.update({**op_substitutions, **substitutions})
 
+    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs.update({**substitutions, **op_substitutions})
+    merge_subs.update({**op_substitutions, **substitutions})
+     
     print(merge_subs)
 
     biased_text = []
@@ -432,7 +445,7 @@ for rel in range(1, 2):
         column_combined_biased_text.append(base_text)
     first_item_flag = True
     column_combined_biased_text.append(biased_text)
-print(column_combined_biased_text)
+#print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
@@ -462,6 +475,12 @@ for rel in range(1, 5):
     op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
     merge_subs = {**substitutions, **op_substitutions}
     merge_subs.update({**op_substitutions, **substitutions})
+    
+    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs.update({**substitutions, **op_substitutions})
+    merge_subs.update({**op_substitutions, **substitutions})
+    
 
     print(merge_subs)
 
@@ -477,8 +496,9 @@ for rel in range(1, 5):
         column_combined_biased_text.append(base_text)
     first_item_flag = True
     column_combined_biased_text.append(biased_text)
-print(column_combined_biased_text)
+#print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
 df.to_csv('data/column_based_race_data.csv', header = list(df_religion.columns.values), index=False)
+
