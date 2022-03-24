@@ -311,9 +311,9 @@ sys.stdout = stdout'''
 
 def compressx(min_index = -1, max_index = -1, x = None):
     if max_index < len(x):
-        x = x[:min_index] + [' '.join(x[min_index:max_index])] + x[max_index:]
+        x = x[:min_index] + ['-'.join(x[min_index:max_index])] + x[max_index:]
     else:
-        x = x[:min_index] + [' '.join(x[min_index:max_index])]
+        x = x[:min_index] + ['-'.join(x[min_index:max_index])]
     return x
 
 def diff_words(sen_a, sen_b):
