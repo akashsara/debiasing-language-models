@@ -3,10 +3,34 @@ import sys
 import string
 import re
 
-def replace(string, substitutions):
-    substrings = sorted(substitutions, key=len, reverse=True)
-    regex = re.compile('|'.join(map(re.escape, substrings)))
-    return regex.sub(lambda match: substitutions[match.group(0)], string)
+# remove punctuations from a sentence
+def remove_punctuations(sen):
+    return sen.translate(str.maketrans('', '', string.punctuation))
+
+
+# Replace words of a sentence with new words
+
+def replace(sentence, substitions):
+    sentence = sentence.lower()
+    words = remove_punctuations(sentence).split(' ')
+    try:
+        words = compressx(words.index("saudi"), words.index("saudi")+2, words)
+#        print(sen_a)
+    except:
+        print()
+    
+    for i in range(len(words)):
+        if words[i] in substitions:
+            words[i] = substitions[words[i]]
+    return ' '.join(words)
+
+#replace_sentence("He is a very good boy. His mother is a doctor.", {'he':'she', 'his':'hers', 'boy':'girl'})
+
+
+# def replace(string, substitutions):
+#     substrings = sorted(substitutions, key=len, reverse=True)
+#     regex = re.compile('|'.join(map(re.escape, substrings)))
+#     return regex.sub(lambda match: substitutions[match.group(0)], string)
 
 ######################Geneder################################
 
@@ -282,24 +306,49 @@ with open("religion_taoism_bias_manual_swapped_attr_test.txt", 'w') as file:
     file.close()
 sys.stdout = stdout'''
 
+def compressx(min_index = -1, max_index = -1, x = None):
+    if max_index < len(x):
+        x = x[:min_index] + [' '.join(x[min_index:max_index])] + x[max_index:]
+    else:
+        x = x[:min_index] + [' '.join(x[min_index:max_index])]
+    return x
+
 def diff_words(sen_a, sen_b):
     sen_a = sen_a.split(' ')
     sen_b = sen_b.split(' ')
+    try:
+        sen_a = compressx(sen_a.index("saudi"), sen_a.index("saudi")+2, sen_a)
+#        print(sen_a)
+    except:
+        print()
+    
+    try:
+        sen_b = compressx(sen_b.index("saudi"), sen_b.index("saudi")+2, sen_b)
+ #       print(sen_b)
+    except:
+        print()
+
     words = []
     for i in range(len(sen_a)):
-        if sen_a[i] != sen_b[i]:
-            words.append(sen_b[i].translate(str.maketrans('', '', string.punctuation)))
+        try:
+            if sen_a[i] != sen_b[i]:
+                words.append(sen_b[i].translate(str.maketrans('', '', string.punctuation)))
+        except:
+            print("Exception:")
+            print(sen_a)
+            print(sen_b)
     return words
 
 #####################################Columned Based Data Preparation#############################################
-df_religion = pd.read_csv('../word_lists/religion.csv')
+
+df_religion = pd.read_csv('word_lists/religion.csv')
 print(df_religion.head(n=11))
 df_list = df_religion.T.values.tolist()
 print(df_list)
 
 islam_bias_text = None
 
-with open("../data/religion_islam_bias_manual_swapped_attr_test.txt", 'r') as file:
+with open("data/religion_islam_bias_manual_swapped_attr_test.txt", 'r') as file:
     islam_bias_text = file.readlines()
     file.close()
 
@@ -312,6 +361,7 @@ for rel in range(1, 7):
     substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
     op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
     merge_subs = {**substitutions, **op_substitutions}
+    merge_subs.update({**op_substitutions, **substitutions})
 
     print(merge_subs)
 
@@ -320,9 +370,9 @@ for rel in range(1, 7):
     for i_sen in islam_bias_text:
         c_sen = i_sen
         c_sen = replace(c_sen, merge_subs)
-        biased_text.append((c_sen, diff_words(i_sen, c_sen)))
+        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
         if first_item_flag == False:
-            base_text.append((i_sen, diff_words(c_sen, i_sen)))
+            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
     if first_item_flag == False:
         column_combined_biased_text.append(base_text)
     first_item_flag = True
@@ -331,7 +381,8 @@ print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
-df.to_csv('column_based_religion_data.csv', header = list(df_religion.columns.values), index=False)
+df.to_csv('data/column_based_religion_data.csv', header = list(df_religion.columns.values), index=False)
+
 '''
 
 stdout = sys.stdout
@@ -342,3 +393,47 @@ with open("religion_christianity_bias_manual_swapped_attr_test.txt", 'w') as fil
     file.close()
 sys.stdout = stdout
 '''
+
+
+############################### Gender ###################################
+df_religion = pd.read_csv('word_lists/gender.csv')
+print(df_religion.head(n=11))
+df_list = df_religion.T.values.tolist()
+print(df_list)
+
+islam_bias_text = None
+
+with open("data/gender_male_bias_manual_swapped_attr_test.txt", 'r') as file:
+    islam_bias_text = file.readlines()
+    file.close()
+
+column_combined_biased_text = []
+
+base_text = []
+first_item_flag = False
+
+for rel in range(1, 2):
+    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs = {**substitutions, **op_substitutions}
+    merge_subs.update({**op_substitutions, **substitutions})
+
+    print(merge_subs)
+
+    biased_text = []
+
+    for i_sen in islam_bias_text:
+        c_sen = i_sen
+        c_sen = replace(c_sen, merge_subs)
+        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
+        if first_item_flag == False:
+            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
+    if first_item_flag == False:
+        column_combined_biased_text.append(base_text)
+    first_item_flag = True
+    column_combined_biased_text.append(biased_text)
+print(column_combined_biased_text)
+df = pd.DataFrame(column_combined_biased_text)
+df = df.T
+print(df)
+df.to_csv('data/column_based_gender_data.csv', header = list(df_religion.columns.values), index=False)
