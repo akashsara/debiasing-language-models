@@ -376,6 +376,7 @@ for rel in range(1, 7):
     biased_text = []
 
     for i_sen in islam_bias_text:
+        i_sen = i_sen.strip()
         c_sen = i_sen
         c_sen = replace(c_sen, merge_subs)
         biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
@@ -436,6 +437,7 @@ for rel in range(1, 2):
     biased_text = []
 
     for i_sen in islam_bias_text:
+        i_sen = i_sen.strip()
         c_sen = i_sen
         c_sen = replace(c_sen, merge_subs)
         biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
@@ -487,6 +489,7 @@ for rel in range(1, 5):
     biased_text = []
 
     for i_sen in islam_bias_text:
+        i_sen = i_sen.strip()
         c_sen = i_sen
         c_sen = replace(c_sen, merge_subs)
         biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
