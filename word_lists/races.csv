@@ -1,11 +1,13 @@
 African-American,Anglo American,Hispanic,Asian,Native-American
-Black,White,Hispanic,Brown,Native American
-Negroid,Caucasian,Hispanic,Brown,Native American
+Black,White,Latino,Brown,Native American
+Negroid,Caucasian,Latino,Brown,Native American
 African American,Anglo American,Hispanic,Asian,Native American
 Afro-American,Anglo-American,Hispanic,Asian,Native-American
 Afro American,Anglo American,Hispanic,Asian,Native American
 African,American,Hispanic,Asian,Native American
-Afroamericans, Angloamericans,Hispanic,Asian,Native American
+Afroamericans,Angloamericans,Hispanic,Asian,Native American
 Negroes,Caucasians,Hispanic,Brown,Native American
-dark-skin,light-skin,Hispanic,gray-skin,Native-American
-dark skin,light skin,Hispanic,gray skin,Native American
+dark-skin,light-skin,white-latino,gray-skin,reddish-brown
+dark-skin,light-skin,black-latino,gray-skin,reddish-brown
+dark skin,light skin,black latino,gray skin,reddish-brown
+dark skin,light skin,white latino,gray skin,reddish-brown

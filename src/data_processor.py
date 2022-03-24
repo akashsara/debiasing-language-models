@@ -437,3 +437,48 @@ df = pd.DataFrame(column_combined_biased_text)
 df = df.T
 print(df)
 df.to_csv('data/column_based_gender_data.csv', header = list(df_religion.columns.values), index=False)
+
+
+#####################################Columned Based Data Preparation#############################################
+
+df_religion = pd.read_csv('word_lists/races.csv')
+print(df_religion.head(n=11))
+df_list = df_religion.T.values.tolist()
+print(df_list)
+
+islam_bias_text = None
+
+with open("data/race_black_bias_manual_swapped_attr_test.txt", 'r') as file:
+    islam_bias_text = file.readlines()
+    file.close()
+
+column_combined_biased_text = []
+
+base_text = []
+first_item_flag = False
+
+for rel in range(1, 5):
+    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
+    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
+    merge_subs = {**substitutions, **op_substitutions}
+    merge_subs.update({**op_substitutions, **substitutions})
+
+    print(merge_subs)
+
+    biased_text = []
+
+    for i_sen in islam_bias_text:
+        c_sen = i_sen
+        c_sen = replace(c_sen, merge_subs)
+        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
+        if first_item_flag == False:
+            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
+    if first_item_flag == False:
+        column_combined_biased_text.append(base_text)
+    first_item_flag = True
+    column_combined_biased_text.append(biased_text)
+print(column_combined_biased_text)
+df = pd.DataFrame(column_combined_biased_text)
+df = df.T
+print(df)
+df.to_csv('data/column_based_race_data.csv', header = list(df_religion.columns.values), index=False)
