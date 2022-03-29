@@ -45,19 +45,37 @@ def get_samples(array, samples_needed):
     return samples
 
 
-def load_data() -> Tuple[Dict, Dict, Dict]:
+def get_pairs(array):
+    dataset = []
+    for i in range(len(array)):
+        array_i = array[i]
+        array_i = [x for x in array_i if len(make_tuple(x)[1]) > 0]
+        if len(array_i) < 2:
+            continue
+        for j in range(len(array_i)):
+            for k in range(j+1, len(array_i)):
+                array_i_1 = array_i[j]
+                array_i_2 = array_i[k]
+                record = [make_tuple(array_i_1), make_tuple(array_i_2)]
+                dataset.append(record)
+    return dataset
+
+def load_data_religion():
     df = pd.read_csv("../data/column_based_religion_data.csv")
     train_array, val_array, test_array = (
-        df[:-150].to_numpy(),
-        df[-150:-100].to_numpy(),
-        df[-100:].to_numpy(),
+        df[:-50].to_numpy(),
+        df[-50:].to_numpy(),
+        None
     )
-
-    train = get_samples(train_array, 5000)
-    val = get_samples(val_array, 250)
-    test = get_samples(test_array, 500)
-
+    train = get_pairs(train_array)
+    val = get_pairs(val_array)
+    test = {}
     return train, val, test
+
+
+def load_data(bias_type) -> Tuple[Dict, Dict, Dict]:
+    if bias_type == "religion":
+        return load_data_religion()
 
 
 def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
@@ -94,10 +112,10 @@ def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
 
 class SentencePairsDataset(Dataset):
     def __init__(
-        self,
-        data: List[str],
-        tokenizer: transformers.PreTrainedTokenizer,
-        max_source_length: int,
+            self,
+            data: List[str],
+            tokenizer: transformers.PreTrainedTokenizer,
+            max_source_length: int,
     ):
         """
         Args:
@@ -181,17 +199,17 @@ class SentencePairsDataset(Dataset):
         sensitive_word_mask = torch.zeros_like(sentence_ids)
         word_len = len(sensitive_word_ids)
         for i in range(len(sentence_ids)):
-            if torch.equal(sentence_ids[i : i + word_len], sensitive_word_ids):
-                sensitive_word_mask[i : i + word_len] = 1
+            if torch.equal(sentence_ids[i: i + word_len], sensitive_word_ids):
+                sensitive_word_mask[i: i + word_len] = 1
         return sensitive_word_mask
 
 
 class BertDataset(Dataset):
     def __init__(
-        self,
-        data: List[str],
-        tokenizer: transformers.PreTrainedTokenizer,
-        max_length: int,
+            self,
+            data: List[str],
+            tokenizer: transformers.PreTrainedTokenizer,
+            max_length: int,
     ):
         """
         Args:
@@ -230,12 +248,12 @@ class BertDataset(Dataset):
 
 class T5Dataset(Dataset):
     def __init__(
-        self,
-        data: List[str],
-        tokenizer: transformers.PreTrainedTokenizer,
-        mask_fraction: int,
-        max_source_length: int,
-        max_target_length: int,
+            self,
+            data: List[str],
+            tokenizer: transformers.PreTrainedTokenizer,
+            mask_fraction: int,
+            max_source_length: int,
+            max_target_length: int,
     ):
         """
         Args:
@@ -301,7 +319,7 @@ class T5Dataset(Dataset):
         return mask_indices
 
     def add_sentinel_tokens(
-        self, sequence: List[str], mask_indices: List[int]
+            self, sequence: List[str], mask_indices: List[int]
     ) -> Tuple[Sequence[str], Sequence[str]]:
         """
         Apply sentinel masking
@@ -329,3 +347,6 @@ class T5Dataset(Dataset):
                 masked_input.append(word)
                 previous_masked_target = True
         return masked_input, masked_target
+
+
+load_data_religion()

@@ -39,73 +39,6 @@ class DebiasingTrainer:
         torch.nn.init.uniform_(param_tensor)
         self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
 
-    def regularizer(
-        self,
-        logits: torch.Tensor,
-        mask: torch.Tensor,
-    ):
-        """
-        logits:
-            The predictions from the model for a particular word.
-            Tensor: (batch_size, sequence_length, vocab_size)
-        mask:
-            The mask associated with the inputs.
-            We use this to ensure we don't interfere with padding.
-        """
-        mask = torch.where(mask.unsqueeze(-1) == 0, -1e9, 0.0)
-        logits = logits + mask
-        logits = torch.nn.functional.softmax(logits, dim=-1)
-        loss = []
-
-        # For every word in sequence_length
-        for i in range(logits.shape[1]):
-            term_loss = []
-            # For every word group in the word set
-            for word_group in self.word_set:
-                word_losses = []
-                # For every word in the word group
-                for class_idx, word in enumerate(word_group):
-                    # If multi-token word, average the probabilities of them all
-                    # Else just take the one probability
-                    if i + len(word) - 1 < logits.shape[1]:
-                        word_loss_sum = 0
-                        for j, k in enumerate(word):
-                            word_loss_sum += (
-                                self.weighting_params[class_idx] * logits[:, i + j, k]
-                            )
-                            # print("LOGITS: " + str(logits[3, i + j, k]))
-
-                        word_loss = word_loss_sum / len(word)
-                        # print(type(word_loss))
-                        # print("WORD LOSS SHAPE " + str(word_loss.shape))
-                        word_losses.append(word_loss)
-                        # if np.isnan(word_loss.cpu().data):
-                        #     print("DEBUGGING NAN: " + str(word_loss_sum) + " " + str(len(word)))
-
-                # Convert list to a tensor
-                if len(word_losses) == 0:
-                    continue
-                # print("WORD LOSSES Pre-A: " + str(word_losses))
-                word_losses = torch.stack(word_losses)
-                # print("WORD LOSSES A: " + str(word_losses))
-                # Divide each term by the mean of all the terms
-                # print("WORD LOSS MEAN SHAPE " + str(word_losses.mean(axis=0).shape))
-                word_losses = word_losses / word_losses.mean(axis=0)
-                # print("WORD LOSSES B: " + str(word_losses))
-
-                # Take the mean absolute value of the log of the terms
-                # This term corresponds to L_(R,C) in our formula
-                term_loss.append(word_losses.log().abs().mean(axis=0))
-                # print("WORD LOSSES C: " + str(term_loss))
-            # Get the mean loss across the word set.
-            # Corresponds to L_R in our formula
-            loss.append(torch.stack(term_loss).mean(axis=0))
-            # print("LOSSES D: " + str(term_loss))
-        # Get the mean loss across the sequence length
-        loss = torch.stack(loss).mean(axis=0)
-        # print("LOSS E: " + str(loss))
-        # Take the mean here to account for batch size
-        return loss.mean()
 
     def sentence_regularizer(
         self,
@@ -237,7 +170,6 @@ class DebiasingTrainer:
         model = BertModel.from_pretrained(self.model_params["MODEL"])
         model = model.to(self.device)
         parameters = [p for p in model.parameters()]
-        parameters.append(self.weighting_params)
         optimizer = torch.optim.AdamW(
             params=parameters, lr=self.model_params["LEARNING_RATE"]
         )
@@ -251,10 +183,6 @@ class DebiasingTrainer:
         for epoch in range(self.model_params["TRAIN_EPOCHS"]):
             console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
-
-            print(
-                "Post-Weighting parameters are: {}".format(str(self.weighting_params))
-            )
 
             with torch.no_grad():
                 valid_losses = self.validate(model, validation_loader)
