@@ -13,6 +13,22 @@ np.random.seed(0)  # numpy random seed
 torch.backends.cudnn.deterministic = True
 
 
+def load_cnn_data(model_params) -> Tuple[Dict, Dict, Dict]:
+    """
+    Note: We can use a dict or something for easy swapping of datasets
+    later on.
+    """
+    # https://huggingface.co/datasets/viewer/?dataset=cnn_dailymail
+    if model_params["DOWNLOAD_CNN_DATA"]:
+        dataset = load_dataset("cnn_dailymail", "3.0.0", keep_in_memory=True)
+        with open("cnn_dailmail_saved.pkl", "wb") as filewrite:
+            pickle.dump(dataset, filewrite)
+    else:
+        dataset = pickle.load(open(model_params["CNN_DATA_PATH"], "rb"))
+    train, val, test = dataset["train"], dataset["validation"], dataset["test"]
+    return train["article"], val["article"], test["article"]
+
+
 def get_samples(array, samples_needed):
     samples = []
     while len(samples) < samples_needed:
@@ -32,8 +48,12 @@ def get_samples(array, samples_needed):
 
 
 def load_data() -> Tuple[Dict, Dict, Dict]:
-    df = pd.read_csv('../data/column_based_religion_data.csv')
-    train_array, val_array, test_array = df[:-100].to_numpy(), df[-100:-90].to_numpy(), df[-90:].to_numpy()
+    df = pd.read_csv("../data/column_based_religion_data.csv")
+    train_array, val_array, test_array = (
+        df[:-100].to_numpy(),
+        df[-100:-90].to_numpy(),
+        df[-90:].to_numpy(),
+    )
 
     train = get_samples(train_array, 100)
     val = get_samples(val_array, 10)
@@ -74,28 +94,22 @@ def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
     return train, val, test
 
 
-class T5Dataset(Dataset):
+class SentencePairsDataset(Dataset):
     def __init__(
-            self,
-            data: List[str],
-            tokenizer: transformers.PreTrainedTokenizer,
-            mask_fraction: int,
-            max_source_length: int,
-            max_target_length: int,
+        self,
+        data: List[str],
+        tokenizer: transformers.PreTrainedTokenizer,
+        max_source_length: int,
     ):
         """
         Args:
             data: A list of articles
             tokenizer: Tokenizer to use
-            mask_fraction: Percentage of the sequence to sentinel mask
             max_source_length: maximum source sequence length
-            max_target_length: maximum target sequence length
         """
         self.data = data
         self.tokenizer = tokenizer
-        self.mask_fraction = mask_fraction
         self.max_source_length = max_source_length
-        self.max_target_length = max_target_length
 
     def __len__(self) -> int:
         return len(self.data)
@@ -140,16 +154,20 @@ class T5Dataset(Dataset):
             return_attention_mask=False,
             return_tensors="pt",
         )
-        
+
         sentence1_ids = sentence1_encoding.input_ids[0]
         sentence2_ids = sentence2_encoding.input_ids[0]
         sentence1_mask = sentence1_encoding.attention_mask[0]
         sentence2_mask = sentence2_encoding.attention_mask[0]
         # Ignore CLS & SEP when getting sensitive word ids
-        sensitive_word1_ids = sensitive_word1_encoding.input_ids[0][1:-1] 
+        sensitive_word1_ids = sensitive_word1_encoding.input_ids[0][1:-1]
         sensitive_word2_ids = sensitive_word2_encoding.input_ids[0][1:-1]
-        sensitive_word1_mask = self.mask_sensitive_word(sentence1_ids, sensitive_word1_ids)
-        sensitive_word2_mask = self.mask_sensitive_word(sentence2_ids, sensitive_word2_ids)
+        sensitive_word1_mask = self.mask_sensitive_word(
+            sentence1_ids, sensitive_word1_ids
+        )
+        sensitive_word2_mask = self.mask_sensitive_word(
+            sentence2_ids, sensitive_word2_ids
+        )
 
         # Return
         return {
@@ -160,14 +178,117 @@ class T5Dataset(Dataset):
             "sensitive_word1_ids": sensitive_word1_mask,
             "sensitive_word2_ids": sensitive_word2_mask,
         }
-        
+
     def mask_sensitive_word(self, sentence_ids, sensitive_word_ids):
         sensitive_word_mask = torch.zeros_like(sentence_ids)
         word_len = len(sensitive_word_ids)
         for i in range(len(sentence_ids)):
-            if torch.equal(sentence_ids[i:i+word_len], sensitive_word_ids):
-                sensitive_word_mask[i:i+word_len] = 1
+            if torch.equal(sentence_ids[i : i + word_len], sensitive_word_ids):
+                sensitive_word_mask[i : i + word_len] = 1
         return sensitive_word_mask
+
+
+class BertDataset(Dataset):
+    def __init__(
+        self,
+        data: List[str],
+        tokenizer: transformers.PreTrainedTokenizer,
+        max_length: int,
+    ):
+        """
+        Args:
+            data: A list of articles
+            tokenizer: Tokenizer to use
+            mask_fraction: Percentage of the sequence to sentinel mask
+            max_source_length: maximum source sequence length
+            max_target_length: maximum target sequence length
+        """
+        self.data = data
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        # Get item from dataset
+        sequence = self.data[idx]
+        # Tokenize, Encode, Pad/Truncate & Get Attention Mask
+        encoding = self.tokenizer(
+            sequence,
+            padding="max_length",
+            max_length=self.max_length,
+            truncation=True,
+            is_split_into_words=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+        # Return
+        return {
+            "input_ids": encoding.input_ids[0],
+            "attention_mask": encoding.attention_mask[0],
+        }
+
+
+class T5Dataset(Dataset):
+    def __init__(
+        self,
+        data: List[str],
+        tokenizer: transformers.PreTrainedTokenizer,
+        mask_fraction: int,
+        max_source_length: int,
+        max_target_length: int,
+    ):
+        """
+        Args:
+            data: A list of articles
+            tokenizer: Tokenizer to use
+            mask_fraction: Percentage of the sequence to sentinel mask
+            max_source_length: maximum source sequence length
+            max_target_length: maximum target sequence length
+        """
+        self.data = data
+        self.tokenizer = tokenizer
+        self.mask_fraction = mask_fraction
+        self.max_source_length = max_source_length
+        self.max_target_length = max_target_length
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        # Get item from dataset
+        sequence = self.data[idx].split()
+        # Get indices of words to mask
+        mask_indices = self.get_mask_ids(len(sequence))
+        # Apply sentinel masking
+        masked_inputs, masked_target = self.add_sentinel_tokens(sequence, mask_indices)
+        # Tokenize, Encode, Pad/Truncate & Get Attention Mask
+        encoding = self.tokenizer(
+            masked_inputs,
+            padding="max_length",
+            max_length=self.max_source_length,
+            truncation=True,
+            is_split_into_words=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+        labels = self.tokenizer(
+            masked_target,
+            padding="max_length",
+            max_length=self.max_target_length,
+            truncation=True,
+            is_split_into_words=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
+        # Return
+        return {
+            "source_ids": encoding.input_ids[0],
+            "source_mask": encoding.attention_mask[0],
+            "target_ids": labels.input_ids[0],
+            "target_mask": labels.attention_mask[0],
+        }
 
     def get_mask_ids(self, sequence_length: int) -> Sequence[int]:
         """
@@ -182,7 +303,7 @@ class T5Dataset(Dataset):
         return mask_indices
 
     def add_sentinel_tokens(
-            self, sequence: List[str], mask_indices: List[int]
+        self, sequence: List[str], mask_indices: List[int]
     ) -> Tuple[Sequence[str], Sequence[str]]:
         """
         Apply sentinel masking

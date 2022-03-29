@@ -5,7 +5,7 @@ from rich.console import Console
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from transformers import BertModel
+from transformers import BertForMaskedLM, BertModel
 import os
 
 console = Console(record=True)
@@ -15,7 +15,7 @@ np.random.seed(0)  # numpy random seed
 torch.backends.cudnn.deterministic = True
 
 
-class T5Trainer:
+class DebiasingTrainer:
     def __init__(self, model_params, tokenizer):
         self.model_params = model_params
         self.tokenizer = tokenizer
@@ -146,8 +146,8 @@ class T5Trainer:
 
             # Extracting the embeddings for each token
             # last_hidden_state: [batch_size, seq_len, hidden_state]
-            sentence1_y_hat = sentence1_y_hat.last_hidden_state  
-            sentence2_y_hat = sentence2_y_hat.last_hidden_state  
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state
 
             # Extract embeddings for each sensitive word
             word1 = torch.matmul(word1, sentence1_y_hat)
@@ -159,7 +159,7 @@ class T5Trainer:
             word1 = word1.mean(dim=1)
             word2 = word2.mean(dim=1)
 
-            # Embedding of CLS token is the sentence embedding: 
+            # Embedding of CLS token is the sentence embedding:
             # [batch_size, hidden_state]
             sentence1_y_hat = sentence1_y_hat[:, 0, :]
             sentence2_y_hat = sentence2_y_hat[:, 0, :]
@@ -203,8 +203,8 @@ class T5Trainer:
 
             # Extracting the embeddings for each token
             # last_hidden_state: [batch_size, seq_len, hidden_state]
-            sentence1_y_hat = sentence1_y_hat.last_hidden_state  
-            sentence2_y_hat = sentence2_y_hat.last_hidden_state  
+            sentence1_y_hat = sentence1_y_hat.last_hidden_state
+            sentence2_y_hat = sentence2_y_hat.last_hidden_state
 
             # Extract embeddings for each sensitive word
             word1 = torch.matmul(word1, sentence1_y_hat)
@@ -216,7 +216,7 @@ class T5Trainer:
             word1 = word1.mean(dim=1)
             word2 = word2.mean(dim=1)
 
-            # Embedding of CLS token is the sentence embedding: 
+            # Embedding of CLS token is the sentence embedding:
             # [batch_size, hidden_state]
             sentence1_y_hat = sentence1_y_hat[:, 0, :]
             sentence2_y_hat = sentence2_y_hat[:, 0, :]
@@ -240,7 +240,7 @@ class T5Trainer:
         early_stopping = EarlyStopping(
             patience=self.model_params["EARLY_STOPPING_PATIENCE"],
             verbose=False,
-            path=self.model_params["OUTPUT_PATH"]
+            path=self.model_params["OUTPUT_PATH"],
         )
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
@@ -346,3 +346,111 @@ class EarlyStopping:
             )
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
+
+
+class LMHeadTrainer:
+    def __init__(self, model_params, tokenizer):
+        self.model_params = model_params
+        self.tokenizer = tokenizer
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    def train(self, model, loader, optimizer):
+        train_losses = []
+        model.train()
+        for _, data in tqdm(
+            enumerate(loader, 0), total=len(loader), desc="Processing batches.."
+        ):
+            # Setup Data
+            input_ids = data["input_ids"].to(self.device, dtype=torch.long)
+            attention_mask = data["attention_mask"].to(self.device, dtype=torch.long)
+            labels = data["labels"].to(self.device, dtype=torch.long)
+
+            # Pass through model
+            outputs = model(
+                input_ids=input_ids, attention_mask=attention_mask, labels=labels
+            )
+
+            loss = outputs["loss"]
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            train_losses.append(loss.item())
+        return train_losses
+
+    def validate(self, model, loader):
+        validate_losses = []
+        model.eval()
+        for _, data in tqdm(
+            enumerate(loader, 0), total=len(loader), desc="Validating batches.."
+        ):
+            # Setup Data
+            input_ids = data["input_ids"].to(self.device, dtype=torch.long)
+            attention_mask = data["attention_mask"].to(self.device, dtype=torch.long)
+            labels = data["labels"].to(self.device, dtype=torch.long)
+
+            # Pass through model
+            outputs = model(
+                input_ids=input_ids, attention_mask=attention_mask, labels=labels
+            )
+
+            loss = outputs["loss"]
+
+            validate_losses.append(loss.item())
+        return validate_losses
+
+    def train_model(self, training_loader, validation_loader):
+        console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
+        model = BertForMaskedLM.from_pretrained(self.model_params["MODEL"])
+        # Load debiased model
+        model.bert = BertModel.from_pretrained(
+            os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
+        )
+        model = model.to(self.device)
+        # Freeze layers
+        for param in model.bert.parameters():
+            param.requires_grad = False
+
+        console.log(
+            f"Total Parameters in Model: {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
+        )
+        console.log(
+            f"Trainable Parameters in Model: {sum(p.numel() for p in model.parameters())}"
+        )
+
+        parameters = [p for p in model.parameters()]
+        optimizer = torch.optim.AdamW(
+            params=parameters, lr=self.model_params["LEARNING_RATE"]
+        )
+        early_stopping = EarlyStopping(
+            patience=self.model_params["EARLY_STOPPING_PATIENCE"],
+            verbose=False,
+            path=self.model_params["OUTPUT_PATH"],
+        )
+
+        # Training loop
+        console.log(f"[Initiating Fine Tuning]...\n")
+        for epoch in range(self.model_params["LM_TRAIN_EPOCHS"]):
+            console.log(f"[Epoch: {epoch + 1}/{self.model_params['LM_TRAIN_EPOCHS']}]")
+            train_losses = self.train(model, training_loader, optimizer)
+
+            with torch.no_grad():
+                valid_losses = self.validate(model, validation_loader)
+
+            # calculate average loss over an epoch
+            train_loss = np.average(train_losses)
+            valid_loss = np.average(valid_losses)
+
+            console.log(f"[Train Loss: {train_loss} \t Val Loss: {valid_loss}]")
+            # early_stopping checks if the validation loss has decreased,
+            # and if it has, it will make a checkpoint of the current model
+            early_stopping(valid_loss, model)
+            if early_stopping.early_stop:
+                print("Early stopping")
+                break
+
+        console.log(f"[Saving Model]...\n")
+        # Saving the model after training
+        path = os.path.join(self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_files")
+        model.save_pretrained(path)
+        self.tokenizer.save_pretrained(path)
