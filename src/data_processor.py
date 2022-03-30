@@ -21,10 +21,11 @@ def replace(sentence, substitions):
 #        print(sen_a)
     except:
         print()
-    
+    flag = True
     for i in range(len(words)):
-        if words[i] in substitions:
+        if words[i] in substitions and flag:
             words[i] = substitions[words[i]]
+            flag = False
     return ' '.join(words)
 
 #replace_sentence("He is a very good boy. His mother is a doctor.", {'he':'she', 'his':'hers', 'boy':'girl'})
