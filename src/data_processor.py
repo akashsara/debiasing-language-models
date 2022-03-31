@@ -2,6 +2,8 @@ import pandas as pd
 import sys
 import string
 import re
+import copy
+from torch import le
 import inflect
 
 infl = inflect.engine()
@@ -12,7 +14,6 @@ def remove_punctuations(sen):
 
 
 # Replace words of a sentence with new words
-
 def replace(sentence, substitions):
     sentence = sentence.lower()
     words = remove_punctuations(sentence).split(' ')
@@ -28,7 +29,36 @@ def replace(sentence, substitions):
             flag = False
     return ' '.join(words)
 
-#replace_sentence("He is a very good boy. His mother is a doctor.", {'he':'she', 'his':'hers', 'boy':'girl'})
+# replace words in a sentence with new words and return multiple sentences
+def replace_sentences(sentence, df_list):
+    sentence = sentence.lower()
+    sentence = remove_punctuations(sentence).split(' ')
+    try:
+        sentence = compressx(sentence.index("saudi"), sentence.index("saudi")+2, sentence)
+    except:
+        print()
+    positions = []
+    for i in range(len(sentence)):
+        for row in range(len(df_list)):
+            for col in range(len(df_list[row])):
+                if df_list[row][col] == sentence[i]:
+                    positions.append((i, row, col))
+    sentences = set()
+    for i in range(len(positions)):
+        copy_sentence = copy.deepcopy(sentence)
+        pos = positions[i][0]
+        row = positions[i][1]
+        col = positions[i][2]
+        sentences.add((' '.join(copy.deepcopy(sentence)), sentence[pos]))
+        for j in range(len(df_list[row])):
+            if j != col:
+                copy_sentence[pos] = df_list[row][j]
+                sentences.add((' '.join(copy_sentence), df_list[row][j]))
+    return sentences
+            
+
+# df_list = [['he', 'she', '##'], ['his','her', '$$'], ['boy', 'girl', '**']]
+# replace_sentences("He is a very good boy. His mother is a doctor.", df_list)
 
 
 # def replace(string, substitutions):
@@ -347,8 +377,30 @@ def diff_words(sen_a, sen_b):
 
 df_religion = pd.read_csv('word_lists/religion.csv')
 print(df_religion.head(n=11))
-df_list = df_religion.T.values.tolist()
+df_list = df_religion.values.tolist()
 print(df_list)
+plural_list = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(infl.plural(str(df_list[i][j])).lower())
+    plural_list.append(row)
+
+cp_df = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(str(df_list[i][j]).lower())
+    cp_df.append(row)
+    
+df_list = cp_df + plural_list
+            
 
 islam_bias_text = None
 
@@ -358,40 +410,15 @@ with open("data/religion_islam_bias_manual_swapped_attr_test.txt", 'r') as file:
 
 column_combined_biased_text = []
 
-base_text = []
-first_item_flag = False
-
-for rel in range(1, 7):
-    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs = {**substitutions, **op_substitutions}
-    merge_subs.update({**op_substitutions, **substitutions})
-    
-    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs.update({**substitutions, **op_substitutions})
-    merge_subs.update({**op_substitutions, **substitutions})    
-
-    print(merge_subs)
-
-    biased_text = []
-
-    for i_sen in islam_bias_text:
-        i_sen = i_sen.strip()
-        c_sen = i_sen
-        c_sen = replace(c_sen, merge_subs)
-        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
-        if first_item_flag == False:
-            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
-    if first_item_flag == False:
-        column_combined_biased_text.append(base_text)
-    first_item_flag = True
-    column_combined_biased_text.append(biased_text)
+for i_sen in islam_bias_text:
+    i_sen = i_sen.strip()
+    c_sen = i_sen
+    b_sens = replace_sentences(c_sen, df_list)
+    column_combined_biased_text.append(b_sens)
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
-df = df.T
 print(df)
-df.to_csv('data/column_based_religion_data.csv', header = list(df_religion.columns.values), index=False)
+df.to_csv('data/column_based_religion_data.csv', header = None, index=False)
 
 '''
 
@@ -408,8 +435,30 @@ sys.stdout = stdout
 ############################### Gender ###################################
 df_religion = pd.read_csv('word_lists/gender.csv')
 print(df_religion.head(n=11))
-df_list = df_religion.T.values.tolist()
+df_list = df_religion.values.tolist()
 print(df_list)
+plural_list = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(infl.plural(str(df_list[i][j])).lower())
+    plural_list.append(row)
+
+cp_df = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(str(df_list[i][j]).lower())
+    cp_df.append(row)
+    
+df_list = cp_df + plural_list
+            
 
 islam_bias_text = None
 
@@ -419,48 +468,45 @@ with open("data/gender_male_bias_manual_swapped_attr_test.txt", 'r') as file:
 
 column_combined_biased_text = []
 
-base_text = []
-first_item_flag = False
-
-for rel in range(1, 2):
-    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs = {**substitutions, **op_substitutions}
-    merge_subs.update({**op_substitutions, **substitutions})
-
-    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs.update({**substitutions, **op_substitutions})
-    merge_subs.update({**op_substitutions, **substitutions})
-     
-    print(merge_subs)
-
-    biased_text = []
-
-    for i_sen in islam_bias_text:
-        i_sen = i_sen.strip()
-        c_sen = i_sen
-        c_sen = replace(c_sen, merge_subs)
-        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
-        if first_item_flag == False:
-            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
-    if first_item_flag == False:
-        column_combined_biased_text.append(base_text)
-    first_item_flag = True
-    column_combined_biased_text.append(biased_text)
+for i_sen in islam_bias_text:
+    i_sen = i_sen.strip()
+    c_sen = i_sen
+    b_sens = replace_sentences(c_sen, df_list)
+    column_combined_biased_text.append(b_sens)
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
-df = df.T
 print(df)
-df.to_csv('data/column_based_gender_data.csv', header = list(df_religion.columns.values), index=False)
+df.to_csv('data/column_based_gender_data.csv', header = None, index=False)
 
 
 #####################################Columned Based Data Preparation#############################################
 
 df_religion = pd.read_csv('word_lists/races.csv')
 print(df_religion.head(n=11))
-df_list = df_religion.T.values.tolist()
+df_list = df_religion.values.tolist()
 print(df_list)
+plural_list = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(infl.plural(str(df_list[i][j])).lower())
+    plural_list.append(row)
+
+cp_df = []
+for i in range(len(df_list)):
+    row = []
+    for j in range(len(df_list[i])):
+        if(str(df_list[i][j]) == 'nan'):
+            row.append('')
+        else:
+            row.append(str(df_list[i][j]).lower())
+    cp_df.append(row)
+    
+df_list = cp_df + plural_list
+            
 
 islam_bias_text = None
 
@@ -470,39 +516,13 @@ with open("data/race_black_bias_manual_swapped_attr_test.txt", 'r') as file:
 
 column_combined_biased_text = []
 
-base_text = []
-first_item_flag = False
-
-for rel in range(1, 5):
-    substitutions = {str(b_word).lower(): str(df_list[rel][i]).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {str(df_list[rel][i]).lower(): str(b_word).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs = {**substitutions, **op_substitutions}
-    merge_subs.update({**op_substitutions, **substitutions})
-    
-    substitutions = {infl.plural(str(b_word)).lower(): infl.plural(str(df_list[rel][i])).lower() for i, b_word in enumerate(df_list[0])}
-    op_substitutions = {infl.plural(str(df_list[rel][i])).lower(): infl.plural(str(b_word)).lower() for i, b_word in enumerate(df_list[0])}
-    merge_subs.update({**substitutions, **op_substitutions})
-    merge_subs.update({**op_substitutions, **substitutions})
-    
-
-    print(merge_subs)
-
-    biased_text = []
-
-    for i_sen in islam_bias_text:
-        i_sen = i_sen.strip()
-        c_sen = i_sen
-        c_sen = replace(c_sen, merge_subs)
-        biased_text.append((c_sen, diff_words(remove_punctuations(i_sen), c_sen)))
-        if first_item_flag == False:
-            base_text.append((remove_punctuations(i_sen), diff_words(c_sen, remove_punctuations(i_sen))))
-    if first_item_flag == False:
-        column_combined_biased_text.append(base_text)
-    first_item_flag = True
-    column_combined_biased_text.append(biased_text)
+for i_sen in islam_bias_text:
+    i_sen = i_sen.strip()
+    c_sen = i_sen
+    b_sens = replace_sentences(c_sen, df_list)
+    column_combined_biased_text.append(b_sens)
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
-df = df.T
 print(df)
-df.to_csv('data/column_based_race_data.csv', header = list(df_religion.columns.values), index=False)
+df.to_csv('data/column_based_race_data.csv', header = None, index=False)
 
