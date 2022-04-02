@@ -60,30 +60,28 @@ def get_pairs(array):
             for k in range(j+1, len(array_i)):
                 array_i_1 = array_i[j]
                 array_i_2 = array_i[k]
-                record = [make_tuple(array_i_1), make_tuple(array_i_2)]
+                record = (make_tuple(array_i_1), make_tuple(array_i_2))
                 dataset.append(record)
-    return dataset
+    deduped_dataset = list(set(dataset))
+    deduped_dataset = [list(d) for d in deduped_dataset]
+    return deduped_dataset
 
 
 def load_data(bias_type) -> Tuple[Dict, Dict, Dict]:
     if bias_type == RELIGION:
-        val_size = 50
+        val_size = 1000
         csv_file = "../data/column_based_religion_data.csv"
     elif bias_type == GENDER:
-        val_size = 50
+        val_size = 200
         csv_file = "../data/column_based_gender_data.csv"
     elif bias_type == RACE:
-        val_size = 50
+        val_size = 1000
         csv_file = "../data/column_based_race_data.csv"
 
     df = pd.read_csv(csv_file, header=None, keep_default_na=False)
-    train_array, val_array, test_array = (
-        df[:-val_size].to_numpy(),
-        df[-val_size:].to_numpy(),
-        None
-    )
-    train = get_pairs(train_array)
-    val = get_pairs(val_array)
+    pairs = get_pairs(df.to_numpy())
+    train = pairs[:-val_size]
+    val = pairs[-val_size:]
     return train, val, {}
 
 
@@ -356,5 +354,3 @@ class T5Dataset(Dataset):
                 masked_input.append(word)
                 previous_masked_target = True
         return masked_input, masked_target
-
-load_data(RELIGION)

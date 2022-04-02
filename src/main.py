@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import data
 
 BIAS_TYPE = data.RELIGION
+# BIAS_TYPE = "NONE"
 
 REGULARISATION_PARAM = 0.01
 
@@ -27,6 +28,7 @@ model_params = {
     "DOWNLOAD_CNN_DATA": False,  # Set to False to provide a path to the data
     "CNN_DATA_PATH": "../data/cnn_dailmail_saved.pkl",
     "DEBIAS_MODEL": True,  # Set to False to skip the debiasing process
+    # "DEBIAS_MODEL": False,  # Set to False to skip the debiasing process
     "LM_TRAINING": True,  # Set to False to skip the LM training step
     "MLM_PROBABILITY": 0.15,  # Masked LM probability
 }
@@ -83,6 +85,9 @@ if model_params["LM_TRAINING"]:
     print("Starting LM Training...")
 
     train, val, test = data.load_cnn_data(model_params)
+    ### Using 5% data like https://arxiv.org/pdf/2109.08565.pdf
+    train = train[:15000]
+    val = val[:6500]
 
     train_dataset = data.BertDataset(
         train,
@@ -128,4 +133,7 @@ if model_params["LM_TRAINING"]:
 
     # Debiasing Training
     lm_trainer = LMHeadTrainer(model_params, tokenizer)
-    lm_trainer.train_model(train_dataloader, val_dataloader)
+    if model_params["DEBIAS_MODEL"]:
+        lm_trainer.train_model(train_dataloader, val_dataloader, use_debiased_bert=True)
+    else:
+        lm_trainer.train_model(train_dataloader, val_dataloader, use_debiased_bert=False)

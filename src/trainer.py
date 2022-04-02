@@ -331,13 +331,15 @@ class LMHeadTrainer:
             validate_losses.append(loss.item())
         return validate_losses
 
-    def train_model(self, training_loader, validation_loader):
+    def train_model(self, training_loader, validation_loader, use_debiased_bert=True):
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
         model = BertForMaskedLM.from_pretrained(self.model_params["MODEL"])
         # Load debiased model
-        model.bert = BertModel.from_pretrained(
-            os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
-        )
+        if use_debiased_bert:
+            model.bert = BertModel.from_pretrained(
+                os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
+            )
+
         model = model.to(self.device)
         # Freeze layers
         for param in model.bert.parameters():
