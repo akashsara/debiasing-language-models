@@ -8,6 +8,10 @@ import pickle
 import pandas as pd
 from ast import literal_eval as make_tuple
 
+RELIGION = "religion"
+GENDER = "gender"
+RACE = "race"
+
 torch.manual_seed(0)  # pytorch random seed
 np.random.seed(0)  # numpy random seed
 torch.backends.cudnn.deterministic = True
@@ -49,7 +53,7 @@ def get_pairs(array):
     dataset = []
     for i in range(len(array)):
         array_i = array[i]
-        array_i = [x for x in array_i if len(make_tuple(x)[1]) > 0]
+        array_i = [x for x in array_i if x and len(make_tuple(x)[1]) > 0]
         if len(array_i) < 2:
             continue
         for j in range(len(array_i)):
@@ -60,22 +64,27 @@ def get_pairs(array):
                 dataset.append(record)
     return dataset
 
-def load_data_religion():
-    df = pd.read_csv("../data/column_based_religion_data.csv")
+
+def load_data(bias_type) -> Tuple[Dict, Dict, Dict]:
+    if bias_type == RELIGION:
+        val_size = 50
+        csv_file = "../data/column_based_religion_data.csv"
+    elif bias_type == GENDER:
+        val_size = 50
+        csv_file = "../data/column_based_gender_data.csv"
+    elif bias_type == RACE:
+        val_size = 50
+        csv_file = "../data/column_based_race_data.csv"
+
+    df = pd.read_csv(csv_file, header=None, keep_default_na=False)
     train_array, val_array, test_array = (
-        df[:-50].to_numpy(),
-        df[-50:].to_numpy(),
+        df[:-val_size].to_numpy(),
+        df[-val_size:].to_numpy(),
         None
     )
     train = get_pairs(train_array)
     val = get_pairs(val_array)
-    test = {}
-    return train, val, test
-
-
-def load_data(bias_type) -> Tuple[Dict, Dict, Dict]:
-    if bias_type == "religion":
-        return load_data_religion()
+    return train, val, {}
 
 
 def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
@@ -348,5 +357,4 @@ class T5Dataset(Dataset):
                 previous_masked_target = True
         return masked_input, masked_target
 
-
-load_data_religion()
+load_data(RELIGION)

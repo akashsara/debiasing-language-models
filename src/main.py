@@ -1,11 +1,10 @@
 from transformers import BertTokenizer
 from transformers import DataCollatorForLanguageModeling
 from trainer import DebiasingTrainer, LMHeadTrainer
-from generator import T5Generator
 from torch.utils.data import DataLoader
 import data
 
-BIAS_TYPE = "religion"
+BIAS_TYPE = data.RELIGION
 
 REGULARISATION_PARAM = 0.01
 
