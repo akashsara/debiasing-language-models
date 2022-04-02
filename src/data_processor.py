@@ -43,17 +43,17 @@ def replace_sentences(sentence, df_list):
             for col in range(len(df_list[row])):
                 if df_list[row][col] == sentence[i]:
                     positions.append((i, row, col))
-    sentences = set()
+    sentences = [set() for _ in range(len(positions))]
     for i in range(len(positions)):
         copy_sentence = copy.deepcopy(sentence)
         pos = positions[i][0]
         row = positions[i][1]
         col = positions[i][2]
-        sentences.add((' '.join(copy.deepcopy(sentence)), sentence[pos]))
+        sentences[i].add((' '.join(copy.deepcopy(sentence)), sentence[pos]))
         for j in range(len(df_list[row])):
             if j != col:
                 copy_sentence[pos] = df_list[row][j]
-                sentences.add((' '.join(copy_sentence), df_list[row][j]))
+                sentences[i].add((' '.join(copy_sentence), df_list[row][j]))
     return sentences
             
 
@@ -414,7 +414,8 @@ for i_sen in islam_bias_text:
     i_sen = i_sen.strip()
     c_sen = i_sen
     b_sens = replace_sentences(c_sen, df_list)
-    column_combined_biased_text.append(b_sens)
+    for items in b_sens:
+        column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 print(df)
@@ -472,7 +473,8 @@ for i_sen in islam_bias_text:
     i_sen = i_sen.strip()
     c_sen = i_sen
     b_sens = replace_sentences(c_sen, df_list)
-    column_combined_biased_text.append(b_sens)
+    for items in b_sens:
+        column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 print(df)
@@ -520,7 +522,8 @@ for i_sen in islam_bias_text:
     i_sen = i_sen.strip()
     c_sen = i_sen
     b_sens = replace_sentences(c_sen, df_list)
-    column_combined_biased_text.append(b_sens)
+    for items in b_sens:
+        column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
 print(df)
