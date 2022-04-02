@@ -377,6 +377,7 @@ def diff_words(sen_a, sen_b):
 
 df_religion = pd.read_csv('word_lists/religion.csv')
 print(df_religion.head(n=11))
+df_religion.drop_duplicates()
 df_list = df_religion.values.tolist()
 print(df_list)
 plural_list = []
@@ -418,6 +419,7 @@ for i_sen in islam_bias_text:
         column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
+df = df.drop_duplicates(keep='first')
 print(df)
 df.to_csv('data/column_based_religion_data.csv', header = None, index=False)
 
@@ -436,6 +438,7 @@ sys.stdout = stdout
 ############################### Gender ###################################
 df_religion = pd.read_csv('word_lists/gender.csv')
 print(df_religion.head(n=11))
+df_religion.drop_duplicates()
 df_list = df_religion.values.tolist()
 print(df_list)
 plural_list = []
@@ -477,6 +480,7 @@ for i_sen in islam_bias_text:
         column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
+df = df.drop_duplicates(keep='first')
 print(df)
 df.to_csv('data/column_based_gender_data.csv', header = None, index=False)
 
@@ -485,6 +489,7 @@ df.to_csv('data/column_based_gender_data.csv', header = None, index=False)
 
 df_religion = pd.read_csv('word_lists/races.csv')
 print(df_religion.head(n=11))
+df_religion.drop_duplicates()
 df_list = df_religion.values.tolist()
 print(df_list)
 plural_list = []
@@ -526,6 +531,7 @@ for i_sen in islam_bias_text:
         column_combined_biased_text.append(list(items))
 #print(column_combined_biased_text)
 df = pd.DataFrame(column_combined_biased_text)
+df = df.drop_duplicates(keep='first')
 print(df)
 df.to_csv('data/column_based_race_data.csv', header = None, index=False)
 
