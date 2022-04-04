@@ -194,7 +194,7 @@ class DebiasingTrainer:
             train_loss = np.average(train_losses)
             valid_loss = np.average(valid_losses)
 
-            console.log(f"[Train Loss: {train_loss} \t Val Loss: {valid_loss}]")
+            console.log(f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
             # early_stopping checks if the validation loss has decreased,
             # and if it has, it will make a checkpoint of the current model
             early_stopping(valid_loss, model)
@@ -202,9 +202,9 @@ class DebiasingTrainer:
                 print("Early stopping")
                 break
 
-        console.log(f"[Saving Model]...\n")
         # Saving the model after training
         path = os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
+        console.log(f"[Saving Model at {path}]...\n")
         model.save_pretrained(path)
         self.tokenizer.save_pretrained(path)
 
@@ -216,7 +216,7 @@ class EarlyStopping:
     """
 
     def __init__(
-        self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print
+        self, patience=7, verbose=False, delta=0.1, path="checkpoint.pt", trace_func=print
     ):
         """
         Args:
@@ -375,7 +375,7 @@ class LMHeadTrainer:
             train_loss = np.average(train_losses)
             valid_loss = np.average(valid_losses)
 
-            console.log(f"[Train Loss: {train_loss} \t Val Loss: {valid_loss}]")
+            console.log(f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
             # early_stopping checks if the validation loss has decreased,
             # and if it has, it will make a checkpoint of the current model
             early_stopping(valid_loss, model)
@@ -383,8 +383,8 @@ class LMHeadTrainer:
                 print("Early stopping")
                 break
 
-        console.log(f"[Saving Model]...\n")
         # Saving the model after training
         path = os.path.join(self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_files")
+        console.log(f"[Saving Model at {path}]...\n")
         model.save_pretrained(path)
         self.tokenizer.save_pretrained(path)
