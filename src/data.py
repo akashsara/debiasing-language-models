@@ -8,6 +8,10 @@ import pickle
 import pandas as pd
 from ast import literal_eval as make_tuple
 
+RELIGION = "religion"
+GENDER = "gender"
+RACE = "race"
+
 torch.manual_seed(0)  # pytorch random seed
 np.random.seed(0)  # numpy random seed
 torch.backends.cudnn.deterministic = True
@@ -49,33 +53,36 @@ def get_pairs(array):
     dataset = []
     for i in range(len(array)):
         array_i = array[i]
-        array_i = [x for x in array_i if len(make_tuple(x)[1]) > 0]
+        array_i = [x for x in array_i if x and len(make_tuple(x)[1]) > 0]
         if len(array_i) < 2:
             continue
         for j in range(len(array_i)):
             for k in range(j+1, len(array_i)):
                 array_i_1 = array_i[j]
                 array_i_2 = array_i[k]
-                record = [make_tuple(array_i_1), make_tuple(array_i_2)]
+                record = (make_tuple(array_i_1), make_tuple(array_i_2))
                 dataset.append(record)
-    return dataset
-
-def load_data_religion():
-    df = pd.read_csv("../data/column_based_religion_data.csv")
-    train_array, val_array, test_array = (
-        df[:-50].to_numpy(),
-        df[-50:].to_numpy(),
-        None
-    )
-    train = get_pairs(train_array)
-    val = get_pairs(val_array)
-    test = {}
-    return train, val, test
+    deduped_dataset = list(set(dataset))
+    deduped_dataset = [list(d) for d in deduped_dataset]
+    return deduped_dataset
 
 
 def load_data(bias_type) -> Tuple[Dict, Dict, Dict]:
-    if bias_type == "religion":
-        return load_data_religion()
+    if bias_type == RELIGION:
+        val_size = 1000
+        csv_file = "../data/column_based_religion_data.csv"
+    elif bias_type == GENDER:
+        val_size = 200
+        csv_file = "../data/column_based_gender_data.csv"
+    elif bias_type == RACE:
+        val_size = 1000
+        csv_file = "../data/column_based_race_data.csv"
+
+    df = pd.read_csv(csv_file, header=None, keep_default_na=False)
+    pairs = get_pairs(df.to_numpy())
+    train = pairs[:-val_size]
+    val = pairs[-val_size:]
+    return train, val, {}
 
 
 def load_data_reddit() -> Tuple[Dict, Dict, Dict]:
@@ -347,6 +354,3 @@ class T5Dataset(Dataset):
                 masked_input.append(word)
                 previous_masked_target = True
         return masked_input, masked_target
-
-
-load_data_religion()
