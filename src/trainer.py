@@ -25,7 +25,6 @@ class DebiasingTrainer:
         # Convert CSV -> Word Set
         # If multiple words are in a group for a class, we use the first word.
 
-        print(sys.path)
         df = pd.read_csv(model_params["WORD_LIST"])
         df.fillna("N/A", inplace=True)
         for col in df.columns:
@@ -216,7 +215,7 @@ class EarlyStopping:
     """
 
     def __init__(
-        self, patience=7, verbose=False, delta=0.1, path="checkpoint.pt", trace_func=print
+        self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print
     ):
         """
         Args:
@@ -336,6 +335,7 @@ class LMHeadTrainer:
         model = BertForMaskedLM.from_pretrained(self.model_params["MODEL"])
         # Load debiased model
         if use_debiased_bert:
+            print("Using debiased model...")
             model.bert = BertModel.from_pretrained(
                 os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
             )

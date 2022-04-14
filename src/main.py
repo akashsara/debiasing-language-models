@@ -4,15 +4,15 @@ from trainer import DebiasingTrainer, LMHeadTrainer
 from torch.utils.data import DataLoader
 import data
 
-# BIAS_TYPE = data.RELIGION
-BIAS_TYPE = "NONE"
+BIAS_TYPE = data.RELIGION
+# BIAS_TYPE = "NONE"
 
-DEBIAS_MODEL = False  # Set to False to skip the debiasing process
+DEBIAS_MODEL = True  # Set to False to skip the debiasing process
 LM_TRAINING = True  # Set to False to skip the LM training step
 
 model_params_debias = {
-    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp/",
+    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp_50/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp_50/",
     "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 30,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
@@ -25,16 +25,16 @@ model_params_debias = {
 }
 
 model_params_lm = {
-    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp/",
+    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp_50/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp_50/",
     "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
-    "LM_TRAIN_EPOCHS": 50,
+    "LM_TRAIN_EPOCHS": 100,
     "LM_VAL_EPOCHS": 1,
     "LEARNING_RATE": 1e-4,  # learning rate
-    "MAX_SOURCE_TEXT_LENGTH": 512,  # max length of source text
+    "MAX_SOURCE_TEXT_LENGTH": 64,  # max length of source text
     "MAX_TARGET_TEXT_LENGTH": 32,  # max length of target text
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
-    "BATCH_SIZE": 16,  # Batch size to use
+    "BATCH_SIZE": 64,  # Batch size to use
     "WORD_LIST": f"../word_lists/{BIAS_TYPE}.csv",
     "DOWNLOAD_CNN_DATA": False,  # Set to False to provide a path to the data
     "CNN_DATA_PATH": "../data/cnn_dailmail_saved.pkl",
@@ -56,7 +56,14 @@ if DEBIAS_MODEL:
 
     print("Starting Model debiasing...")
 
-    train, val, test = data.load_data(BIAS_TYPE)
+    if BIAS_TYPE != data.MERGED:
+        train, val, test = data.load_data_demographic(BIAS_TYPE)
+    else:
+        train, val, test = data.load_data_merged()
+
+    if BIAS_TYPE == data.RELIGION:
+        train = train[:5000]
+        print("Taking subset of train dataset for Religion")
 
     train_dataset = data.SentencePairsDataset(
         train,
@@ -98,7 +105,7 @@ if LM_TRAINING:
 
     train, val, test = data.load_cnn_data(model_params_lm)
     ### Using 5% data (15000 training instances) like https://arxiv.org/pdf/2109.08565.pdf
-    train = train[:30000]
+    train = train[:15000]
     val = val[:6500]
 
     train_dataset = data.BertDataset(
