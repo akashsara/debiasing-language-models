@@ -3,16 +3,25 @@ from transformers import DataCollatorForLanguageModeling
 from trainer import DebiasingTrainer, LMHeadTrainer
 from torch.utils.data import DataLoader
 import data
+import sys
 
-BIAS_TYPE = data.RELIGION
-# BIAS_TYPE = "NONE"
+BIAS = sys.argv[1]
+DEBIAS_SIZE = int(sys.argv[2])
+LM_FRACTION = float(sys.argv[3])
+
+print(f'Bias Type: {BIAS}\nDebias Size: {DEBIAS_SIZE}\nLM CNN Fraction: {LM_FRACTION}')
+
+# BIAS_TYPE = data.RELIGION
+# # BIAS_TYPE = "NONE"
+
+MAX_CNN_SIZE = 300000
 
 DEBIAS_MODEL = True  # Set to False to skip the debiasing process
 LM_TRAINING = True  # Set to False to skip the LM training step
 
 model_params_debias = {
-    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp_50/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp_50/",
+    "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 30,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
@@ -21,12 +30,12 @@ model_params_debias = {
     "MAX_TARGET_TEXT_LENGTH": 32,  # max length of target text
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "BATCH_SIZE": 64,  # Batch size to use
-    "WORD_LIST": f"../word_lists/{BIAS_TYPE}.csv"
+    "WORD_LIST": f"../word_lists/{BIAS}.csv"
 }
 
 model_params_lm = {
-    "OUTPUT_PATH": f"../models/{BIAS_TYPE}/exp_50/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS_TYPE}/exp_50/",
+    "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
     "LM_TRAIN_EPOCHS": 100,
     "LM_VAL_EPOCHS": 1,
@@ -35,7 +44,7 @@ model_params_lm = {
     "MAX_TARGET_TEXT_LENGTH": 32,  # max length of target text
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "BATCH_SIZE": 64,  # Batch size to use
-    "WORD_LIST": f"../word_lists/{BIAS_TYPE}.csv",
+    "WORD_LIST": f"../word_lists/{BIAS}.csv",
     "DOWNLOAD_CNN_DATA": False,  # Set to False to provide a path to the data
     "CNN_DATA_PATH": "../data/cnn_dailmail_saved.pkl",
     "MLM_PROBABILITY": 0.15,  # Masked LM probability
@@ -56,14 +65,16 @@ if DEBIAS_MODEL:
 
     print("Starting Model debiasing...")
 
-    if BIAS_TYPE != data.MERGED:
-        train, val, test = data.load_data_demographic(BIAS_TYPE)
+    if BIAS != data.MERGED:
+        train, val, test = data.load_data_demographic(BIAS)
     else:
         train, val, test = data.load_data_merged()
 
-    if BIAS_TYPE == data.RELIGION:
-        train = train[:5000]
-        print("Taking subset of train dataset for Religion")
+    if DEBIAS_SIZE > len(train):
+        print("DEBIAS SIZE > TRAIN SIZE. No need to run")
+        exit()
+
+    train = train[:DEBIAS_SIZE]
 
     train_dataset = data.SentencePairsDataset(
         train,
@@ -104,8 +115,8 @@ if LM_TRAINING:
     print("Starting LM Training...")
 
     train, val, test = data.load_cnn_data(model_params_lm)
-    ### Using 5% data (15000 training instances) like https://arxiv.org/pdf/2109.08565.pdf
-    train = train[:15000]
+    train_sample_size = int(MAX_CNN_SIZE * LM_FRACTION)
+    train = train[:train_sample_size]
     val = val[:6500]
 
     train_dataset = data.BertDataset(
