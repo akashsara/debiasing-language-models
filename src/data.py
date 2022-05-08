@@ -87,22 +87,22 @@ def load_data_demographic(bias_type) -> Tuple[Dict, Dict, Dict]:
     return train, val, {}
 
 
-def load_data_merged() -> Tuple[Dict, Dict, Dict]:
-    religion_data_train, religion_data_val, _ = load_data_demographic(RELIGION)
-    gender_data_train, gender_data_val, _ = load_data_demographic(GENDER)
-    race_data_train, race_data_val, _ = load_data_demographic(RACE)
-
-    random.shuffle(religion_data_train)
-    random.shuffle(gender_data_train)
-    random.shuffle(race_data_train)
-    random.shuffle(religion_data_val)
-    random.shuffle(gender_data_val)
-    random.shuffle(race_data_val)
-
-    train = religion_data_train[:1000] + gender_data_train[:1000] + race_data_train[:1000]
-    val = religion_data_val[:200] + gender_data_val[:200] + race_data_val[:200]
-
-    return train, val, {}
+# def load_data_merged() -> Tuple[Dict, Dict, Dict]:
+#     religion_data_train, religion_data_val, _ = load_data_demographic(RELIGION)
+#     gender_data_train, gender_data_val, _ = load_data_demographic(GENDER)
+#     race_data_train, race_data_val, _ = load_data_demographic(RACE)
+#
+#     random.shuffle(religion_data_train)
+#     random.shuffle(gender_data_train)
+#     random.shuffle(race_data_train)
+#     random.shuffle(religion_data_val)
+#     random.shuffle(gender_data_val)
+#     random.shuffle(race_data_val)
+#
+#     train = religion_data_train[:1000] + gender_data_train[:1000] + race_data_train[:1000]
+#     val = religion_data_val[:200] + gender_data_val[:200] + race_data_val[:200]
+#
+#     return train, val, {}
 
 
 def load_data_reddit() -> Tuple[Dict, Dict, Dict]:

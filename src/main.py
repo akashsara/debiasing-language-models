@@ -19,10 +19,13 @@ MAX_CNN_SIZE = 300000
 DEBIAS_MODEL = True  # Set to False to skip the debiasing process
 LM_TRAINING = True  # Set to False to skip the LM training step
 
+if DEBIAS_SIZE == 0:
+    DEBIAS_MODEL = False
+
 model_params_debias = {
     "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
+    "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 30,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
@@ -36,7 +39,7 @@ model_params_debias = {
 model_params_lm = {
     "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "MODEL": "bert-base-cased",  # model_type: t5-base/t5-large
+    "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
     "LM_TRAIN_EPOCHS": 100,
     "LM_VAL_EPOCHS": 1,
     "LEARNING_RATE": 1e-4,  # learning rate
@@ -67,8 +70,8 @@ if DEBIAS_MODEL:
 
     if BIAS != data.MERGED:
         train, val, test = data.load_data_demographic(BIAS)
-    else:
-        train, val, test = data.load_data_merged()
+    # else:
+    #     train, val, test = data.load_data_merged()
 
     if DEBIAS_SIZE > len(train):
         print("DEBIAS SIZE > TRAIN SIZE. No need to run")
