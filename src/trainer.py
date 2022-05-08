@@ -48,7 +48,7 @@ class DebiasingTrainer:
     ):
         # TODO: Do we want an absolute loss here?
         sentence_difference = sentence1 - sentence2
-        word_difference = word2 - word1
+        word_difference = word1 - word2
         # TODO: What loss to use? MSE is the simple option
         return torch.nn.functional.mse_loss(sentence_difference, word_difference)
 
