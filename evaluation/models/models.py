@@ -6,7 +6,7 @@ class BertLM(transformers.BertPreTrainedModel):
         pass
 
     def __new__(self, pretrained_model):
-        pretrained_model = 'models/baseline_10_perc_512len/'
+        #pretrained_model = 'models/religion_2.5k_5_perc_50ep/'
         # model = transformers.BertForMaskedLM.from_pretrained('bert-base-cased')
         # model.bert = transformers.BertModel.from_pretrained(pretrained_model)
         # return model
@@ -17,8 +17,8 @@ class BertNextSentence(transformers.BertPreTrainedModel):
         pass
 
     def __new__(self, pretrained_model):
-        pretrained_model = 'models/baseline_10_perc_512len/'
-        model = transformers.BertForNextSentencePrediction.from_pretrained('bert-base-cased')
+        #pretrained_model = 'models/religion_2.5k_5_perc_50ep/'
+        model = transformers.BertForNextSentencePrediction.from_pretrained('bert-base-uncased')
         model.bert = transformers.BertModel.from_pretrained(pretrained_model)
         return model
 
