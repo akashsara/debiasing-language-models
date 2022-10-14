@@ -23,8 +23,8 @@ if DEBIAS_SIZE == 0:
     DEBIAS_MODEL = False
 
 model_params_debias = {
-    "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "OUTPUT_PATH": f"../models/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 30,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
@@ -37,8 +37,8 @@ model_params_debias = {
 }
 
 model_params_lm = {
-    "OUTPUT_PATH": f"../models/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "OUTPUT_PATH": f"../models/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
+    "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
     "LM_TRAIN_EPOCHS": 100,
     "LM_VAL_EPOCHS": 1,

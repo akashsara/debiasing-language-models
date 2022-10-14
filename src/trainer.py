@@ -38,13 +38,12 @@ class DebiasingTrainer:
         torch.nn.init.uniform_(param_tensor)
         self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
 
-
     def sentence_regularizer(
-        self,
-        sentence1: torch.Tensor,
-        sentence2: torch.Tensor,
-        word1: torch.Tensor,
-        word2: torch.Tensor,
+            self,
+            sentence1: torch.Tensor,
+            sentence2: torch.Tensor,
+            word1: torch.Tensor,
+            word2: torch.Tensor,
     ):
         # TODO: Do we want an absolute loss here?
         sentence_difference = sentence1 - sentence2
@@ -57,7 +56,7 @@ class DebiasingTrainer:
         model.train()
         # print("Pre-Weighting parameters are: {}".format(str(self.weighting_params)))
         for _, data in tqdm(
-            enumerate(loader, 0), total=len(loader), desc="Processing batches.."
+                enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
             # Setup Data
             sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
@@ -114,7 +113,7 @@ class DebiasingTrainer:
         validate_losses = []
         model.eval()
         for _, data in tqdm(
-            enumerate(loader, 0), total=len(loader), desc="Validating batches.."
+                enumerate(loader, 0), total=len(loader), desc="Validating batches.."
         ):
             # Setup Data
             sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
@@ -215,7 +214,7 @@ class EarlyStopping:
     """
 
     def __init__(
-        self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print
+            self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print
     ):
         """
         Args:
@@ -289,7 +288,7 @@ class LMHeadTrainer:
         train_losses = []
         model.train()
         for _, data in tqdm(
-            enumerate(loader, 0), total=len(loader), desc="Processing batches.."
+                enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
             # Setup Data
             input_ids = data["input_ids"].to(self.device, dtype=torch.long)
@@ -313,7 +312,7 @@ class LMHeadTrainer:
         validate_losses = []
         model.eval()
         for _, data in tqdm(
-            enumerate(loader, 0), total=len(loader), desc="Validating batches.."
+                enumerate(loader, 0), total=len(loader), desc="Validating batches.."
         ):
             # Setup Data
             input_ids = data["input_ids"].to(self.device, dtype=torch.long)

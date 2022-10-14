@@ -2,7 +2,7 @@ import datasets
 import pandas as pd
 import re
 
-PREDICTIONS_FILE = '/Users/dhruvmullick/Projects/debiasing-language-models/models/religion_with_reg/1/predictions.csv'
+PREDICTIONS_FILE = ''
 
 
 def preprocess_each_line(line):
