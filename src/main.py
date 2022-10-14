@@ -40,7 +40,7 @@ model_params_lm = {
     "OUTPUT_PATH": f"../models/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
-    "LM_TRAIN_EPOCHS": 50,
+    "LM_TRAIN_EPOCHS": 30,
     "LM_VAL_EPOCHS": 1,
     "LEARNING_RATE": 1e-4,  # learning rate
     "MAX_SOURCE_TEXT_LENGTH": 64,  # max length of source text
