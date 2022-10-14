@@ -342,8 +342,8 @@ class LMHeadTrainer:
 
         model = model.to(self.device)
         # Freeze layers
-        for param in model.bert.parameters():
-            param.requires_grad = False
+        # for param in model.bert.parameters():
+            # param.requires_grad = False
 
         console.log(
             f"Total Parameters in Model: {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
