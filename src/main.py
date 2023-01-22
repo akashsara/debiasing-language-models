@@ -1,4 +1,4 @@
-from transformers import BertTokenizer
+from transformers import AutoTokenizer
 from transformers import DataCollatorForLanguageModeling
 from trainer import DebiasingTrainer, LMHeadTrainer
 from torch.utils.data import DataLoader
@@ -9,7 +9,8 @@ BIAS = sys.argv[1]
 DEBIAS_SIZE = int(sys.argv[2])
 LM_FRACTION = float(sys.argv[3])
 
-print(f'Bias Type: {BIAS}\nDebias Size: {DEBIAS_SIZE}\nLM CNN Fraction: {LM_FRACTION}')
+print(
+    f'Bias Type: {BIAS}\nDebias Size: {DEBIAS_SIZE}\nLM CNN Fraction: {LM_FRACTION}')
 
 # BIAS_TYPE = data.RELIGION
 # # BIAS_TYPE = "NONE"
@@ -18,6 +19,8 @@ MAX_CNN_SIZE = 300000
 
 DEBIAS_MODEL = True  # Set to False to skip the debiasing process
 LM_TRAINING = True  # Set to False to skip the LM training step
+INTERLEAVING = True
+INTERLEAVING_EPOCHS = 5  # Set to 1 to stop interleaving
 
 if DEBIAS_SIZE == 0:
     DEBIAS_MODEL = False
@@ -62,111 +65,120 @@ print(f"LM Fine tune Model: {LM_TRAINING}\n")
 # ====                           DEBIASING STEPS                            ====
 # ==============================================================================
 
-tokenizer = BertTokenizer.from_pretrained(model_params_debias["MODEL"])
+tokenizer = AutoTokenizer.from_pretrained(model_params_debias["MODEL"])
 
-if DEBIAS_MODEL:
-
-    print("Starting Model debiasing...")
-
-    if BIAS != data.MERGED:
-        train, val, test = data.load_data_demographic(BIAS)
-    # else:
-    #     train, val, test = data.load_data_merged()
-
-    if DEBIAS_SIZE > len(train):
-        print("DEBIAS SIZE > TRAIN SIZE. No need to run")
-        exit()
-
-    train = train[:DEBIAS_SIZE]
-
-    train_dataset = data.SentencePairsDataset(
-        train,
-        tokenizer,
-        model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
-    )
-    val_dataset = data.SentencePairsDataset(
-        val,
-        tokenizer,
-        model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
-    )
-    test_dataset = data.SentencePairsDataset(
-        test,
-        tokenizer,
-        model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
-    )
-    train_dataloader = DataLoader(
-        train_dataset,
-        batch_size=model_params_debias["BATCH_SIZE"],
-        shuffle=True,
-        num_workers=0,
-    )
-    val_dataloader = DataLoader(
-        val_dataset, batch_size=model_params_debias["BATCH_SIZE"], shuffle=True, num_workers=0
-    )
-
-    # Debiasing Training
-    debiasing_trainer = DebiasingTrainer(model_params_debias, tokenizer)
-    debiasing_trainer.train_model(train_dataloader, val_dataloader)
-
-# ==============================================================================
-# ====                          LM HEAD TRAINING                            ====
-# ==============================================================================
-
-
-if LM_TRAINING:
-
-    print("Starting LM Training...")
-
-    train, val, test = data.load_cnn_data(model_params_lm)
-    train_sample_size = int(MAX_CNN_SIZE * LM_FRACTION)
-    train = train[:train_sample_size]
-    val = val[:6500]
-
-    train_dataset = data.BertDataset(
-        train,
-        tokenizer,
-        model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
-    )
-    val_dataset = data.BertDataset(
-        val,
-        tokenizer,
-        model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
-    )
-    test_dataset = data.BertDataset(
-        test,
-        tokenizer,
-        model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
-    )
-
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=True, mlm_probability=model_params_lm["MLM_PROBABILITY"]
-    )
-
-    train_dataloader = DataLoader(
-        train_dataset,
-        collate_fn=data_collator,
-        batch_size=model_params_lm["BATCH_SIZE"],
-        shuffle=True,
-        num_workers=0,
-    )
-    val_dataloader = DataLoader(
-        val_dataset,
-        collate_fn=data_collator,
-        batch_size=model_params_lm["BATCH_SIZE"],
-        shuffle=True,
-        num_workers=0,
-    )
-    test_dataloader = DataLoader(
-        test_dataset,
-        collate_fn=data_collator,
-        batch_size=model_params_lm["BATCH_SIZE"],
-        shuffle=True,
-        num_workers=0,
-    )
-
-    # Debiasing Training
-    lm_trainer = LMHeadTrainer(model_params_lm, tokenizer)
-    if DEBIAS_MODEL:
-        lm_trainer.train_model(train_dataloader, val_dataloader, use_debiased_bert=True)
+for interleaving_epoch in range(INTERLEAVING_EPOCHS):
+    if INTERLEAVING_EPOCHS == 0:
+        print("NO INTERLEAVING")
     else:
-        lm_trainer.train_model(train_dataloader, val_dataloader, use_debiased_bert=False)
+        print(f"INTERLEAVING EPOCH: {interleaving_epoch}")
+    if DEBIAS_MODEL:
+        print("Starting Model debiasing...")
+        if interleaving_epoch == 0:
+            if BIAS != data.MERGED:
+                train_debias, val_debias, test_debias = data.load_data_demographic(
+                    BIAS)
+            # else:
+            #     train, val, test = data.load_data_merged()
+
+            if DEBIAS_SIZE > len(train_debias):
+                print("DEBIAS SIZE > TRAIN SIZE. No need to run")
+                exit()
+
+            train_debias = train_debias[:DEBIAS_SIZE]
+
+            train_debias_dataset = data.SentencePairsDataset(
+                train_debias,
+                tokenizer,
+                model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
+            )
+            val_debias_dataset = data.SentencePairsDataset(
+                val_debias,
+                tokenizer,
+                model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
+            )
+            test_debias_dataset = data.SentencePairsDataset(
+                test_debias,
+                tokenizer,
+                model_params_debias["MAX_SOURCE_TEXT_LENGTH"],
+            )
+            train_debias_dataloader = DataLoader(
+                train_debias_dataset,
+                batch_size=model_params_debias["BATCH_SIZE"],
+                shuffle=True,
+                num_workers=0,
+            )
+            val_debias_dataloader = DataLoader(
+                val_debias_dataset, batch_size=model_params_debias["BATCH_SIZE"], shuffle=True, num_workers=0
+            )
+
+        # Debiasing Training
+        debiasing_trainer = DebiasingTrainer(
+            model_params_debias, tokenizer, interleaving_epoch)
+        debiasing_trainer.train_model(
+            train_debias_dataloader, val_debias_dataloader)
+
+    # ==============================================================================
+    # ====                          LM HEAD TRAINING                            ====
+    # ==============================================================================
+
+    if LM_TRAINING:
+
+        print("Starting LM Training...")
+        if interleaving_epoch == 0:
+            train_lm, val_lm, test_lm = data.load_cnn_data(model_params_lm)
+            train_lm_sample_size = int(MAX_CNN_SIZE * LM_FRACTION)
+            train_lm = train_lm[:train_lm_sample_size]
+            val_lm = val_lm[:6500]
+
+            train_lm_dataset = data.BertDataset(
+                train_lm,
+                tokenizer,
+                model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
+            )
+            val_lm_dataset = data.BertDataset(
+                val_lm,
+                tokenizer,
+                model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
+            )
+            test_lm_dataset = data.BertDataset(
+                test_lm,
+                tokenizer,
+                model_params_lm["MAX_SOURCE_TEXT_LENGTH"],
+            )
+
+            data_collator = DataCollatorForLanguageModeling(
+                tokenizer=tokenizer, mlm=True, mlm_probability=model_params_lm["MLM_PROBABILITY"]
+            )
+
+            train_lm_dataloader = DataLoader(
+                train_lm_dataset,
+                collate_fn=data_collator,
+                batch_size=model_params_lm["BATCH_SIZE"],
+                shuffle=True,
+                num_workers=0,
+            )
+            val_lm_dataloader = DataLoader(
+                val_lm_dataset,
+                collate_fn=data_collator,
+                batch_size=model_params_lm["BATCH_SIZE"],
+                shuffle=True,
+                num_workers=0,
+            )
+            test_lm_dataloader = DataLoader(
+                test_lm_dataset,
+                collate_fn=data_collator,
+                batch_size=model_params_lm["BATCH_SIZE"],
+                shuffle=True,
+                num_workers=0,
+            )
+
+        # Debiasing Training
+        lm_trainer = LMHeadTrainer(
+            model_params_lm, tokenizer, interleaving_epoch)
+        if DEBIAS_MODEL:
+            lm_trainer.train_model(
+                train_lm_dataloader, val_lm_dataloader, use_debiased_bert=True)
+        else:
+            lm_trainer.train_model(
+                train_lm_dataloader, val_lm_dataloader, use_debiased_bert=False)

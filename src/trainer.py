@@ -1,5 +1,4 @@
 import sys
-
 import transformers
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -7,7 +6,7 @@ from rich.console import Console
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from transformers import BertForMaskedLM, BertModel
+from transformers import AutoModelForMaskedLM, AutoModel
 import os
 
 console = Console(record=True)
@@ -18,9 +17,10 @@ torch.backends.cudnn.deterministic = True
 
 
 class DebiasingTrainer:
-    def __init__(self, model_params, tokenizer):
+    def __init__(self, model_params, tokenizer, interleaving_epoch):
         self.model_params = model_params
         self.tokenizer = tokenizer
+        self.interleaving_epoch = interleaving_epoch
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         # Convert CSV -> Word Set
         # If multiple words are in a group for a class, we use the first word.
@@ -36,7 +36,8 @@ class DebiasingTrainer:
         self.num_classes = df.shape[1]
         param_tensor = torch.ones(self.num_classes) / self.num_classes
         torch.nn.init.uniform_(param_tensor)
-        self.weighting_params = torch.nn.Parameter(param_tensor, requires_grad=True)
+        self.weighting_params = torch.nn.Parameter(
+            param_tensor, requires_grad=True)
 
     def sentence_regularizer(
             self,
@@ -59,12 +60,18 @@ class DebiasingTrainer:
                 enumerate(loader, 0), total=len(loader), desc="Processing batches.."
         ):
             # Setup Data
-            sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
-            sentence1_y_mask = data["sentence1_mask"].to(self.device, dtype=torch.long)
-            sentence2_y = data["sentence2_ids"].to(self.device, dtype=torch.long)
-            sentence2_y_mask = data["sentence2_mask"].to(self.device, dtype=torch.long)
-            word1 = data["sensitive_word1_ids"].to(self.device, dtype=torch.float32)
-            word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
+            sentence1_y = data["sentence1_ids"].to(
+                self.device, dtype=torch.long)
+            sentence1_y_mask = data["sentence1_mask"].to(
+                self.device, dtype=torch.long)
+            sentence2_y = data["sentence2_ids"].to(
+                self.device, dtype=torch.long)
+            sentence2_y_mask = data["sentence2_mask"].to(
+                self.device, dtype=torch.long)
+            word1 = data["sensitive_word1_ids"].to(
+                self.device, dtype=torch.float32)
+            word2 = data["sensitive_word2_ids"].to(
+                self.device, dtype=torch.float32)
 
             # Pass through model
             sentence1_y_hat = model(
@@ -116,12 +123,18 @@ class DebiasingTrainer:
                 enumerate(loader, 0), total=len(loader), desc="Validating batches.."
         ):
             # Setup Data
-            sentence1_y = data["sentence1_ids"].to(self.device, dtype=torch.long)
-            sentence1_y_mask = data["sentence1_mask"].to(self.device, dtype=torch.long)
-            sentence2_y = data["sentence2_ids"].to(self.device, dtype=torch.long)
-            sentence2_y_mask = data["sentence2_mask"].to(self.device, dtype=torch.long)
-            word1 = data["sensitive_word1_ids"].to(self.device, dtype=torch.float32)
-            word2 = data["sensitive_word2_ids"].to(self.device, dtype=torch.float32)
+            sentence1_y = data["sentence1_ids"].to(
+                self.device, dtype=torch.long)
+            sentence1_y_mask = data["sentence1_mask"].to(
+                self.device, dtype=torch.long)
+            sentence2_y = data["sentence2_ids"].to(
+                self.device, dtype=torch.long)
+            sentence2_y_mask = data["sentence2_mask"].to(
+                self.device, dtype=torch.long)
+            word1 = data["sensitive_word1_ids"].to(
+                self.device, dtype=torch.float32)
+            word2 = data["sensitive_word2_ids"].to(
+                self.device, dtype=torch.float32)
 
             # Pass through model
             sentence1_y_hat = model(
@@ -165,7 +178,12 @@ class DebiasingTrainer:
 
     def train_model(self, training_loader, validation_loader):
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
-        model = BertModel.from_pretrained(self.model_params["MODEL"])
+        if self.interleaving_epoch == 0:
+            model = AutoModel.from_pretrained(self.model_params["MODEL"])
+        else:
+            print("Loading from previous interleaved epoch")
+            model = AutoModel.from_pretrained(os.path.join(
+                self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_bert_files"))
         model = model.to(self.device)
         parameters = [p for p in model.parameters()]
         optimizer = torch.optim.AdamW(
@@ -179,7 +197,8 @@ class DebiasingTrainer:
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
         for epoch in range(self.model_params["TRAIN_EPOCHS"]):
-            console.log(f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
+            console.log(
+                f"[Epoch: {epoch + 1}/{self.model_params['TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
 
             with torch.no_grad():
@@ -192,7 +211,8 @@ class DebiasingTrainer:
             train_loss = np.average(train_losses)
             valid_loss = np.average(valid_losses)
 
-            console.log(f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
+            console.log(
+                f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
             # early_stopping checks if the validation loss has decreased,
             # and if it has, it will make a checkpoint of the current model
             early_stopping(valid_loss, model)
@@ -279,9 +299,10 @@ class EarlyStopping:
 
 
 class LMHeadTrainer:
-    def __init__(self, model_params, tokenizer):
+    def __init__(self, model_params, tokenizer, interleaving_epoch):
         self.model_params = model_params
         self.tokenizer = tokenizer
+        self.interleaving_epoch = interleaving_epoch
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def train(self, model, loader, optimizer):
@@ -292,7 +313,8 @@ class LMHeadTrainer:
         ):
             # Setup Data
             input_ids = data["input_ids"].to(self.device, dtype=torch.long)
-            attention_mask = data["attention_mask"].to(self.device, dtype=torch.long)
+            attention_mask = data["attention_mask"].to(
+                self.device, dtype=torch.long)
             labels = data["labels"].to(self.device, dtype=torch.long)
 
             # Pass through model
@@ -316,7 +338,8 @@ class LMHeadTrainer:
         ):
             # Setup Data
             input_ids = data["input_ids"].to(self.device, dtype=torch.long)
-            attention_mask = data["attention_mask"].to(self.device, dtype=torch.long)
+            attention_mask = data["attention_mask"].to(
+                self.device, dtype=torch.long)
             labels = data["labels"].to(self.device, dtype=torch.long)
 
             # Pass through model
@@ -331,18 +354,19 @@ class LMHeadTrainer:
 
     def train_model(self, training_loader, validation_loader, use_debiased_bert=True):
         console.log(f"""[Model]: Loading {self.model_params["MODEL"]}...\n""")
-        model = BertForMaskedLM.from_pretrained(self.model_params["MODEL"])
+        model = AutoModelForMaskedLM.from_pretrained(
+            self.model_params["MODEL"])
         # Load debiased model
         if use_debiased_bert:
             print("Using debiased model...")
-            model.bert = BertModel.from_pretrained(
+            model.bert = AutoModel.from_pretrained(
                 os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
             )
 
         model = model.to(self.device)
         # Freeze layers
         # for param in model.bert.parameters():
-            # param.requires_grad = False
+        # param.requires_grad = False
 
         console.log(
             f"Total Parameters in Model: {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
@@ -364,7 +388,8 @@ class LMHeadTrainer:
         # Training loop
         console.log(f"[Initiating Fine Tuning]...\n")
         for epoch in range(self.model_params["LM_TRAIN_EPOCHS"]):
-            console.log(f"[Epoch: {epoch + 1}/{self.model_params['LM_TRAIN_EPOCHS']}]")
+            console.log(
+                f"[Epoch: {epoch + 1}/{self.model_params['LM_TRAIN_EPOCHS']}]")
             train_losses = self.train(model, training_loader, optimizer)
 
             with torch.no_grad():
@@ -374,7 +399,8 @@ class LMHeadTrainer:
             train_loss = np.average(train_losses)
             valid_loss = np.average(valid_losses)
 
-            console.log(f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
+            console.log(
+                f"Train Loss: {train_loss} \n Val Loss: {valid_loss}\n\n")
             # early_stopping checks if the validation loss has decreased,
             # and if it has, it will make a checkpoint of the current model
             early_stopping(valid_loss, model)
@@ -383,7 +409,11 @@ class LMHeadTrainer:
                 break
 
         # Saving the model after training
-        path = os.path.join(self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_files")
+        path = os.path.join(
+            self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_files")
+        path_bert = os.path.join(
+            self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_bert_files")
         console.log(f"[Saving Model at {path}]...\n")
         model.save_pretrained(path)
+        model.bert.save_pretrained(path_bert)
         self.tokenizer.save_pretrained(path)
