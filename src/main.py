@@ -51,7 +51,7 @@ model_params_lm = {
     "EARLY_STOPPING_PATIENCE": 3,  # number of epochs before stopping training.
     "BATCH_SIZE": 64,  # Batch size to use
     "WORD_LIST": f"../word_lists/{BIAS}.csv",
-    "DOWNLOAD_CNN_DATA": False,  # Set to False to provide a path to the data
+    "DOWNLOAD_CNN_DATA": True,  # Set to False to provide a path to the data
     "CNN_DATA_PATH": "../data/cnn_dailmail_saved.pkl",
     "MLM_PROBABILITY": 0.15,  # Masked LM probability
 }
@@ -65,7 +65,8 @@ print(f"LM Fine tune Model: {LM_TRAINING}\n")
 # ====                           DEBIASING STEPS                            ====
 # ==============================================================================
 
-tokenizer = AutoTokenizer.from_pretrained(model_params_debias["MODEL"])
+tokenizer = AutoTokenizer.from_pretrained(
+    model_params_debias["MODEL"], use_fast=False)
 
 for interleaving_epoch in range(INTERLEAVING_EPOCHS):
     if INTERLEAVING_EPOCHS == 0:
