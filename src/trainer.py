@@ -359,7 +359,7 @@ class LMHeadTrainer:
         # Load debiased model
         if use_debiased_bert:
             print("Using debiased model...")
-            model.bert = AutoModel.from_pretrained(
+            model.roberta = AutoModel.from_pretrained(
                 os.path.join(self.model_params["OUTPUT_PATH"], "model_files")
             )
 
@@ -415,5 +415,5 @@ class LMHeadTrainer:
             self.model_params["DOWNSTREAM_OUTPUT_PATH"], "model_bert_files")
         console.log(f"[Saving Model at {path}]...\n")
         model.save_pretrained(path)
-        model.bert.save_pretrained(path_bert)
+        model.roberta.save_pretrained(path_bert)
         self.tokenizer.save_pretrained(path)

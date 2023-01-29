@@ -20,7 +20,7 @@ MAX_CNN_SIZE = 300000
 DEBIAS_MODEL = True  # Set to False to skip the debiasing process
 LM_TRAINING = True  # Set to False to skip the LM training step
 INTERLEAVING = True
-INTERLEAVING_EPOCHS = 5  # Set to 1 to stop interleaving
+INTERLEAVING_EPOCHS = 1  # Set to 1 to stop interleaving
 
 if DEBIAS_SIZE == 0:
     DEBIAS_MODEL = False
@@ -28,7 +28,7 @@ if DEBIAS_SIZE == 0:
 model_params_debias = {
     "OUTPUT_PATH": f"../models/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
+    "MODEL": "roberta-base",  # model_type: t5-base/t5-large
     "TRAIN_EPOCHS": 30,  # number of training epochs
     "VAL_EPOCHS": 1,  # number of validation epochs
     "LEARNING_RATE": 1e-4,  # learning rate
@@ -42,7 +42,7 @@ model_params_debias = {
 model_params_lm = {
     "OUTPUT_PATH": f"../models/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
     "DOWNSTREAM_OUTPUT_PATH": f"../models/downstream/{BIAS}/new_debsize_{DEBIAS_SIZE}/lm_{LM_FRACTION}/",
-    "MODEL": "bert-base-uncased",  # model_type: t5-base/t5-large
+    "MODEL": "roberta-base",  # model_type: t5-base/t5-large
     "LM_TRAIN_EPOCHS": 30,
     "LM_VAL_EPOCHS": 1,
     "LEARNING_RATE": 1e-4,  # learning rate
@@ -65,8 +65,7 @@ print(f"LM Fine tune Model: {LM_TRAINING}\n")
 # ====                           DEBIASING STEPS                            ====
 # ==============================================================================
 
-tokenizer = AutoTokenizer.from_pretrained(
-    model_params_debias["MODEL"], use_fast=False)
+tokenizer = AutoTokenizer.from_pretrained(model_params_debias["MODEL"], use_fast=False)
 
 for interleaving_epoch in range(INTERLEAVING_EPOCHS):
     if INTERLEAVING_EPOCHS == 0:

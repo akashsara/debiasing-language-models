@@ -59,10 +59,10 @@ class T5LM(transformers.T5ForConditionalGeneration):
 
 
 class ModelNSP(nn.Module):
-    def __init__(self, pretrained_model, nsp_dim=300):
+    def __init__(self, pretrained_model, model_class,  nsp_dim=300):
         super(ModelNSP, self).__init__()
         self.pretrained2model = {"xlnet": "XLNetModel", "bert": "BertModel", "roberta": "RobertaModel", "gpt2": "GPT2Model", "t5": "T5Model"}
-        self.model_class = self.pretrained2model[pretrained_model.lower().split("-")[0]]
+        self.model_class = self.pretrained2model[model_class.lower().split("-")[0]]
         print("Model Classes: ", self.model_class)
         self.core_model = getattr(transformers, self.model_class).from_pretrained(pretrained_model)
         self.core_model.train()

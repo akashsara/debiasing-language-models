@@ -40,7 +40,7 @@ def parse_args():
                         help="Choose the name of the predictions file")
 
     parser.add_argument("--skip-intrasentence", help="Skip intrasentence evaluation.",
-                        default=False, action="store_true")
+                        default=True, action="store_true")
     parser.add_argument("--intrasentence-model", type=str, default='BertLM', choices=[
                         'BertLM', 'BertNextSentence', 'RoBERTaLM', 'XLNetLM', 'XLMLM', 'GPT2LM', 'ModelNSP'],
                         help="Choose a model architecture for the intrasentence task.")
@@ -83,8 +83,8 @@ class BiasEvaluator():
 
         self.PRETRAINED_CLASS = pretrained_class
         self.TOKENIZER = tokenizer
-        self.tokenizer = getattr(transformers, self.TOKENIZER).from_pretrained(
-            self.PRETRAINED_CLASS, padding_side="right")
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+            self.PRETRAINED_CLASS, use_fast=False, padding_side="right")
 
         # to keep padding consistent with the other models -> improves LM score.
         if self.tokenizer.__class__.__name__ == "XLNetTokenizer":
@@ -186,8 +186,10 @@ class BiasEvaluator():
         print()
         print(
             f"{Fore.LIGHTBLUE_EX}Evaluating bias on intersentence tasks...{Style.RESET_ALL}")
-        model = getattr(models, self.INTERSENTENCE_MODEL)(
-            self.PRETRAINED_CLASS).to(self.device)
+        if self.INTERSENTENCE_MODEL != "ModelNSP":
+            model = getattr(models, self.INTERSENTENCE_MODEL)(self.PRETRAINED_CLASS).to(self.device)
+        else:
+            model = getattr(models, self.INTERSENTENCE_MODEL)(self.PRETRAINED_CLASS, model_class = "roberta-base").to(self.device)
 
         print(f"Number of parameters: {self.count_parameters(model):,}")
         print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -217,33 +219,39 @@ class BiasEvaluator():
                 input_ids = input_ids.to(self.device)
                 token_type_ids = token_type_ids.to(self.device)
                 attention_mask = attention_mask.to(self.device)
-                outputs = model(input_ids, token_type_ids=token_type_ids)
+                outputs = model(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
                 if type(outputs) == tuple:
                     outputs = outputs[0]
-                outputs = torch.softmax(outputs.logits, dim=1)
+                if self.INTERSENTENCE_MODEL == "ModelNSP":
+                    outputs = torch.softmax(outputs, dim=1)
+                else:
+                    outputs = torch.softmax(outputs.logits, dim=1)
 
                 for idx in range(input_ids.shape[0]):
                     probabilities = {}
                     probabilities['id'] = sentence_id[idx]
+                    #print("0",outputs[idx,0].item())
+                    #print("1",outputs[idx,1].item())
+                    #print("\n\n")
                     if "bert" == self.PRETRAINED_CLASS[:4] or "roberta-base" == self.PRETRAINED_CLASS:
                         probabilities['score'] = outputs[idx, 0].item()
                     else:
-                        probabilities['score'] = outputs[idx, 1].item()
+                        probabilities['score'] = outputs[idx, 0].item()
                     predictions.append(probabilities)
-
+            print(f"PREDICTIONS:{predictions[-20:]}")
             return predictions
 
     def evaluate(self):
         bias = {}
-        if not self.SKIP_INTERSENTENCE:
-            intersentence_bias = self.evaluate_intersentence()
-            bias['intersentence'] = intersentence_bias
-
         if not self.SKIP_INTRASENTENCE:
             intrasentence_bias = self.evaluate_intrasentence()
             bias['intrasentence'] = intrasentence_bias
-        return bias
 
+        if not self.SKIP_INTERSENTENCE:
+            intersentence_bias = self.evaluate_intersentence()
+           # print(intersentence_bias)
+            bias['intersentence'] = intersentence_bias
+        return bias
 
 def process_job(batch, model, pretrained_class):
     input_ids, token_type_ids, attention_mask, sentence_id = batch
@@ -265,6 +273,7 @@ if __name__ == "__main__":
     args = parse_args()
     evaluator = BiasEvaluator(**vars(args))
     results = evaluator.evaluate()
+    print(f"RESULTS:{results}")
     if args.output_file is not None:
         output_file = args.output_file
     else:
