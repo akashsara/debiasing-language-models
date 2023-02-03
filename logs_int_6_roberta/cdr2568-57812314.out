@@ -1,0 +1,61 @@
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) libfabric/1.10.1     2) openmpi/4.0.3     3) ucx/1.8.0
+
+RuntimeError: failed to build image setuptools because:
+Traceback (most recent call last):
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/via_app_data.py", line 57, in _install
+    installer.install(creator.interpreter.version_info)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 39, in install
+    self._sync(filename, into)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/copy.py", line 13, in _sync
+    copy(src, dst)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/util/path/_sync.py", line 52, in copy
+    method(norm(src), norm(dest))
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/util/path/_sync.py", line 63, in copytree
+    shutil.copy(src_f, dest_f)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/shutil.py", line 417, in copy
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/shutil.py", line 256, in copyfile
+    with open(dst, 'wb') as fdst:
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/setuptools/command/register.py'
+
+Traceback (most recent call last):
+  File "/scratch/deep1401/debiasing_language_models/ENV/bin/pip", line 5, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/main.py", line 9, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/autocompletion.py", line 10, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/main_parser.py", line 9, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/build_env.py", line 20, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/spinners.py", line 9, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/utils/logging.py", line 29, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/utils/misc.py", line 41, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/exceptions.py", line 13, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/requests/__init__.py", line 45, in <module>
+    from .exceptions import RequestsDependencyWarning
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/requests/exceptions.py", line 9, in <module>
+    from .compat import JSONDecodeError as CompatJSONDecodeError
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/requests/compat.py", line 10, in <module>
+    from pip._vendor import chardet
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/chardet/__init__.py", line 19, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/chardet/universaldetector.py", line 47, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/chardet/mbcsgroupprober.py", line 30, in <module>
+ModuleNotFoundError: No module named 'pip._vendor.chardet.big5prober'
+/var/spool/slurmd/job57812314/slurm_script: line 14: /scratch/deep1401/debiasing_language_models/ENV/bin/pip: No such file or directory
+gender
+2000
+0.32
+Bias Type: gender
+Debias Size: 2000
+LM CNN Fraction: 0.32
+{'OUTPUT_PATH': '../models/gender/new_debsize_2000/lm_0.32/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/gender/new_debsize_2000/lm_0.32/', 'MODEL': 'roberta-base', 'TRAIN_EPOCHS': 30, 'VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/gender.csv'}
+{'OUTPUT_PATH': '../models/gender/new_debsize_2000/lm_0.32/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/gender/new_debsize_2000/lm_0.32/', 'MODEL': 'roberta-base', 'LM_TRAIN_EPOCHS': 30, 'LM_VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/gender.csv', 'DOWNLOAD_CNN_DATA': True, 'CNN_DATA_PATH': '../data/cnn_dailmail_saved.pkl', 'MLM_PROBABILITY': 0.15}
+Debias Model: True
+
+LM Fine tune Model: True
+
+INTERLEAVING EPOCH: 0
+Starting Model debiasing...
+DEBIAS SIZE > TRAIN SIZE. No need to run
