@@ -1,0 +1,48 @@
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) libfabric/1.10.1     2) openmpi/4.0.3     3) ucx/1.8.0
+
+RuntimeError: failed to build image setuptools because:
+Traceback (most recent call last):
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/via_app_data.py", line 57, in _install
+    installer.install(creator.interpreter.version_info)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 35, in install
+    self._uninstall_previous_version()
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 156, in _uninstall_previous_version
+    self._uninstall_dist(existing_dist)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 178, in _uninstall_dist
+    path.unlink()
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/pathlib.py", line 1204, in unlink
+    self._accessor.unlink(self)
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/distutils-precedence.pth'
+
+Looking in links: /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/avx2, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo/generic, /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/generic
+Requirement already satisfied: torch in ./ENV/lib/python3.10/site-packages (1.13.1+computecanada)
+Requirement already satisfied: torchvision in ./ENV/lib/python3.10/site-packages (0.14.1+computecanada)
+Requirement already satisfied: typing-extensions in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from torch) (4.0.1+computecanada)
+Requirement already satisfied: requests in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from torchvision) (2.27.1+computecanada)
+Requirement already satisfied: numpy in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from torchvision) (1.22.2+computecanada)
+Requirement already satisfied: pillow-simd!=8.3.*,>=5.3.0 in ./ENV/lib/python3.10/site-packages (from torchvision) (9.0.0.post1+computecanada)
+Requirement already satisfied: certifi>=2017.4.17 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from requests->torchvision) (2021.10.8+computecanada)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from requests->torchvision) (1.26.8+computecanada)
+Requirement already satisfied: idna<4,>=2.5 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from requests->torchvision) (3.3+computecanada)
+Requirement already satisfied: charset-normalizer~=2.0.0 in /cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/scipy-stack/2022a/lib/python3.10/site-packages (from requests->torchvision) (2.0.11+computecanada)
+/scratch/deep1401/debiasing_language_models/ENV/bin/python: can't open file '/scratch/deep1401/debiasing_language_models/ENV/bin/pip': [Errno 2] No such file or directory
+gender
+8000
+0.08
+Bias Type: gender
+Debias Size: 8000
+LM CNN Fraction: 0.08
+{'OUTPUT_PATH': '../models/gender/new_debsize_8000/lm_0.08/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/gender/new_debsize_8000/lm_0.08/', 'MODEL': 'bert-base-uncased', 'TRAIN_EPOCHS': 30, 'VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/gender.csv'}
+{'OUTPUT_PATH': '../models/gender/new_debsize_8000/lm_0.08/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/gender/new_debsize_8000/lm_0.08/', 'MODEL': 'bert-base-uncased', 'LM_TRAIN_EPOCHS': 50, 'LM_VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/gender.csv', 'DOWNLOAD_CNN_DATA': True, 'CNN_DATA_PATH': '../data/cnn_dailmail_saved.pkl', 'MLM_PROBABILITY': 0.15}
+Debias Model: True
+
+LM Fine tune Model: True
+
+INTERLEAVING EPOCH: 0
+Starting Model debiasing...
+DEBIAS SIZE > TRAIN SIZE. No need to run
