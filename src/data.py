@@ -51,7 +51,7 @@ def get_samples(array, samples_needed):
     return samples
 
 
-def get_pairs(array):
+def get_pairs(array, suppress_attribute_words=[]):
     dataset = []
     for i in range(len(array)):
         array_i = array[i]
@@ -62,14 +62,16 @@ def get_pairs(array):
             for k in range(j+1, len(array_i)):
                 array_i_1 = array_i[j]
                 array_i_2 = array_i[k]
-                record = (make_tuple(array_i_1), make_tuple(array_i_2))
-                dataset.append(record)
+                # Supress some sensitive word entries just for experimentation
+                if make_tuple(array_i_1)[1] not in suppress_attribute_words and make_tuple(array_i_2)[1] not in suppress_attribute_words:
+                    record = (make_tuple(array_i_1), make_tuple(array_i_2))
+                    dataset.append(record)
     deduped_dataset = list(set(dataset))
     deduped_dataset = [list(d) for d in deduped_dataset]
     return deduped_dataset
 
 
-def load_data_demographic(bias_type) -> Tuple[Dict, Dict, Dict]:
+def load_data_demographic(bias_type, suppress_attribute_words=[]) -> Tuple[Dict, Dict, Dict]:
     if bias_type == RELIGION:
         val_size = 1000
         csv_file = "../data/column_based_religion_data.csv"
@@ -81,7 +83,9 @@ def load_data_demographic(bias_type) -> Tuple[Dict, Dict, Dict]:
         csv_file = "../data/column_based_race_data.csv"
 
     df = pd.read_csv(csv_file, header=None, keep_default_na=False)
-    pairs = get_pairs(df.to_numpy())
+    val_size = 1000
+    pairs = get_pairs(
+        df.to_numpy(), suppress_attribute_words=suppress_attribute_words)
     train = pairs[:-val_size]
     val = pairs[-val_size:]
     return train, val, {}
@@ -305,7 +309,8 @@ class T5Dataset(Dataset):
         # Get indices of words to mask
         mask_indices = self.get_mask_ids(len(sequence))
         # Apply sentinel masking
-        masked_inputs, masked_target = self.add_sentinel_tokens(sequence, mask_indices)
+        masked_inputs, masked_target = self.add_sentinel_tokens(
+            sequence, mask_indices)
         # Tokenize, Encode, Pad/Truncate & Get Attention Mask
         encoding = self.tokenizer(
             masked_inputs,
