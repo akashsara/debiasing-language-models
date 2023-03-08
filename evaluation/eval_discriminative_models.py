@@ -40,7 +40,7 @@ def parse_args():
                         help="Choose the name of the predictions file")
 
     parser.add_argument("--skip-intrasentence", help="Skip intrasentence evaluation.",
-                        default=True, action="store_true")
+                        default=False, action="store_true")
     parser.add_argument("--intrasentence-model", type=str, default='BertLM', choices=[
                         'BertLM', 'BertNextSentence', 'RoBERTaLM', 'XLNetLM', 'XLMLM', 'GPT2LM', 'ModelNSP'],
                         help="Choose a model architecture for the intrasentence task.")
@@ -66,7 +66,7 @@ class BiasEvaluator():
                  input_file="data/bias.json", intrasentence_model="BertLM",
                  intersentence_model="BertNextSentence", tokenizer="BertTokenizer",
                  intersentence_load_path=None, intrasentence_load_path=None, skip_intrasentence=False,
-                 skip_intersentence=False, batch_size=1, max_seq_length=128,
+                 skip_intersentence=False, batch_size=1, max_seq_length=128, 
                  output_dir="predictions/", output_file="predictions.json"):
         print(f"Loading {input_file}...")
         filename = os.path.abspath(input_file)
@@ -140,7 +140,7 @@ class BiasEvaluator():
 
         pad_to_max_length = True if self.batch_size > 1 else False
         dataset = dataloader.IntrasentenceLoader(self.tokenizer, max_seq_length=self.max_seq_length,
-                                                 pad_to_max_length=pad_to_max_length,
+                                                 pad_to_max_length=pad_to_max_length, 
                                                  input_file=args.input_file)
 
         loader = DataLoader(dataset, batch_size=self.batch_size)
@@ -187,11 +187,9 @@ class BiasEvaluator():
         print(
             f"{Fore.LIGHTBLUE_EX}Evaluating bias on intersentence tasks...{Style.RESET_ALL}")
         if self.INTERSENTENCE_MODEL != "ModelNSP":
-            model = getattr(models, self.INTERSENTENCE_MODEL)(
-                self.PRETRAINED_CLASS).to(self.device)
+            model = getattr(models, self.INTERSENTENCE_MODEL)(self.PRETRAINED_CLASS).to(self.device)
         else:
-            model = getattr(models, self.INTERSENTENCE_MODEL)(
-                self.PRETRAINED_CLASS, model_class="roberta-base").to(self.device)
+            model = getattr(models, self.INTERSENTENCE_MODEL)(self.PRETRAINED_CLASS, model_class = "roberta-base").to(self.device)
 
         print(f"Number of parameters: {self.count_parameters(model):,}")
         print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -211,7 +209,8 @@ class BiasEvaluator():
             print(f"Using {n_cpus} cpus!")
             predictions = Parallel(n_jobs=n_cpus, backend="multiprocessing")(delayed(process_job)(
                 batch, model, self.PRETRAINED_CLASS) for batch in tqdm(dataloader, total=len(dataloader)))
-
+        
+        
         else:
             predictions = []
 
@@ -220,8 +219,7 @@ class BiasEvaluator():
                 input_ids = input_ids.to(self.device)
                 token_type_ids = token_type_ids.to(self.device)
                 attention_mask = attention_mask.to(self.device)
-                outputs = model(
-                    input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
+                outputs = model(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
                 if type(outputs) == tuple:
                     outputs = outputs[0]
                 if self.INTERSENTENCE_MODEL == "ModelNSP":
@@ -232,15 +230,15 @@ class BiasEvaluator():
                 for idx in range(input_ids.shape[0]):
                     probabilities = {}
                     probabilities['id'] = sentence_id[idx]
-                    # print("0",outputs[idx,0].item())
-                    # print("1",outputs[idx,1].item())
-                    # print("\n\n")
+                    #print("0",outputs[idx,0].item())
+                    #print("1",outputs[idx,1].item())
+                    #print("\n\n")
                     if "bert" == self.PRETRAINED_CLASS[:4] or "roberta-base" == self.PRETRAINED_CLASS:
                         probabilities['score'] = outputs[idx, 0].item()
                     else:
-                        probabilities['score'] = outputs[idx, 1].item()
+                        probabilities['score'] = outputs[idx, 0].item()
                     predictions.append(probabilities)
-            print(f"PREDICTIONS:{predictions[-20:]}")
+            #print(f"PREDICTIONS:{predictions[-20:]}")
             return predictions
 
     def evaluate(self):
@@ -254,7 +252,6 @@ class BiasEvaluator():
            # print(intersentence_bias)
             bias['intersentence'] = intersentence_bias
         return bias
-
 
 def process_job(batch, model, pretrained_class):
     input_ids, token_type_ids, attention_mask, sentence_id = batch
@@ -276,12 +273,13 @@ if __name__ == "__main__":
     args = parse_args()
     evaluator = BiasEvaluator(**vars(args))
     results = evaluator.evaluate()
-    print(f"RESULTS:{results}")
+    #print(f"RESULTS:{results}")
     if args.output_file is not None:
         output_file = args.output_file
     else:
         output_file = f"predictions_{args.pretrained_class}_{args.intersentence_model}_{args.intrasentence_model}.json"
 
     output_file = os.path.join(args.output_dir, output_file)
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, "w+") as f:
         json.dump(results, f, indent=2)

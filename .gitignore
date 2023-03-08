@@ -5,3 +5,4 @@ env/
 models/
 *.pkl
 .DS_Store
+test.sh

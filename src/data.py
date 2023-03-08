@@ -83,7 +83,6 @@ def load_data_demographic(bias_type, suppress_attribute_words=[]) -> Tuple[Dict,
         csv_file = "../data/column_based_race_data.csv"
 
     df = pd.read_csv(csv_file, header=None, keep_default_na=False)
-    val_size = 1000
     pairs = get_pairs(
         df.to_numpy(), suppress_attribute_words=suppress_attribute_words)
     train = pairs[:-val_size]
