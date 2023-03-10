@@ -1,0 +1,56 @@
+
+Lmod is automatically replacing "intel/2020.1.217" with "gcc/9.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) libfabric/1.10.1     2) openmpi/4.0.3     3) ucx/1.8.0
+
+RuntimeError: failed to build image wheel because:
+Traceback (most recent call last):
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/via_app_data.py", line 57, in _install
+    installer.install(creator.interpreter.version_info)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 35, in install
+    self._uninstall_previous_version()
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 156, in _uninstall_previous_version
+    self._uninstall_dist(existing_dist)
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/site-packages/virtualenv/seed/embed/via_app_data/pip_install/base.py", line 178, in _uninstall_dist
+    path.unlink()
+  File "/cvmfs/soft.computecanada.ca/easybuild/software/2020/avx2/Core/python/3.10.2/lib/python3.10/pathlib.py", line 1204, in unlink
+    self._accessor.unlink(self)
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/../../../bin/wheel3'
+
+Traceback (most recent call last):
+  File "/scratch/deep1401/debiasing_language_models/ENV/bin/pip", line 5, in <module>
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/main.py", line 9, in <module>
+    from pip._internal.cli.autocompletion import autocomplete
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/autocompletion.py", line 10, in <module>
+    from pip._internal.cli.main_parser import create_main_parser
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/main_parser.py", line 9, in <module>
+    from pip._internal.build_env import get_runnable_pip
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/build_env.py", line 19, in <module>
+    from pip._internal.cli.spinners import open_spinner
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/cli/spinners.py", line 9, in <module>
+    from pip._internal.utils.logging import get_indentation
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_internal/utils/logging.py", line 13, in <module>
+    from pip._vendor.rich.console import (
+  File "/scratch/deep1401/debiasing_language_models/ENV/lib/python3.10/site-packages/pip/_vendor/rich/console.py", line 57, in <module>
+ModuleNotFoundError: No module named 'pip._vendor.rich.markup'
+/var/spool/slurmd/job62136931/slurm_script: line 14: /scratch/deep1401/debiasing_language_models/ENV/bin/pip: No such file or directory
+race
+16000
+0.16
+Bias Type: race
+Debias Size: 16000
+LM CNN Fraction: 0.16
+{'OUTPUT_PATH': '../models/race/new_debsize_16000/lm_0.16/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/race/new_debsize_16000/lm_0.16/', 'MODEL': 'distilbert-base-uncased', 'TRAIN_EPOCHS': 30, 'VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/race.csv'}
+{'OUTPUT_PATH': '../models/race/new_debsize_16000/lm_0.16/', 'DOWNSTREAM_OUTPUT_PATH': '../models/downstream/race/new_debsize_16000/lm_0.16/', 'MODEL': 'distilbert-base-uncased', 'LM_TRAIN_EPOCHS': 50, 'LM_VAL_EPOCHS': 1, 'LEARNING_RATE': 0.0001, 'MAX_SOURCE_TEXT_LENGTH': 64, 'MAX_TARGET_TEXT_LENGTH': 32, 'EARLY_STOPPING_PATIENCE': 3, 'BATCH_SIZE': 64, 'WORD_LIST': '../word_lists/race.csv', 'DOWNLOAD_CNN_DATA': True, 'CNN_DATA_PATH': '../data/cnn_dailmail_saved.pkl', 'MLM_PROBABILITY': 0.15}
+Debias Model: True
+
+LM Fine tune Model: True
+
+NO INTERLEAVING
+Starting Model debiasing...
+Suppressed Words:[]
+Train Dataset:11517
+Val Dataset:1000
+DEBIAS SIZE > TRAIN SIZE. No need to run
