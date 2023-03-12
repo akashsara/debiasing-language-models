@@ -1,4 +1,7 @@
 __pycache__/
+evaluation/output_files/
+evaluation/results.json
+*/.DS_Store
 .vscode/
 .idea
 env/

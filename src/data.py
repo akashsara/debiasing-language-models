@@ -75,18 +75,24 @@ def load_data_demographic(bias_type, suppress_attribute_words=[]) -> Tuple[Dict,
     if bias_type == RELIGION:
         val_size = 1000
         csv_file = "../data/column_based_religion_data.csv"
+        #suppress_attribute_words = ['hinduism', 'islam', 'judaism', 'buddhism']
     elif bias_type == GENDER:
         val_size = 200
         csv_file = "../data/column_based_gender_data.csv"
+        #suppress_attribute_words = ['wife', 'husband','dad','mom']
     elif bias_type == RACE:
         val_size = 1000
         csv_file = "../data/column_based_race_data.csv"
+        #suppress_attribute_words = ['native-american', 'brown', 'latino','white']
 
     df = pd.read_csv(csv_file, header=None, keep_default_na=False)
     pairs = get_pairs(
         df.to_numpy(), suppress_attribute_words=suppress_attribute_words)
     train = pairs[:-val_size]
     val = pairs[-val_size:]
+    print(f"Suppressed Words:{suppress_attribute_words}")
+    print(f"Train Dataset:{len(train)}")
+    print(f"Val Dataset:{len(val)}")
     return train, val, {}
 
 
@@ -189,13 +195,13 @@ class SentencePairsDataset(Dataset):
         )
 
         sensitive_word1_encoding = self.tokenizer(
-            sensitive_word1,
+            str(sensitive_word1),
             is_split_into_words=True,
             return_attention_mask=False,
             return_tensors="pt",
         )
         sensitive_word2_encoding = self.tokenizer(
-            sensitive_word2,
+            str(sensitive_word2),
             is_split_into_words=True,
             return_attention_mask=False,
             return_tensors="pt",

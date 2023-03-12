@@ -177,6 +177,7 @@ def parse_file(gold_file, predictions_file):
     else:
         d = overall
 
+    #os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, "w+") as f:
         json.dump(d, f, indent=2)
 
