@@ -109,7 +109,7 @@ class ModelNSP(nn.Module):
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, next_sentence_label=None,
                 position_ids=None, head_mask=None, labels=None):
 
-        if 'Roberta' in self.model_class or 'GPT2' in self.model_class:
+        if 'Roberta' in self.model_class or 'GPT2' in self.model_class or 'DistilBert' in self.model_class or 'distilbert' in self.model_class:
             # , token_type_ids=token_type_ids)
             outputs = self.core_model(input_ids, attention_mask=attention_mask)
         elif 'T5' in self.model_class:
@@ -120,7 +120,7 @@ class ModelNSP(nn.Module):
 
         # assert len(outputs)==2
 
-        if 'gpt2' in self.model_class.lower():
+        if 'gpt2' in self.model_class.lower() or 'distilbert' in self.model_class.lower() or 'albert' in self.model_class.lower():
             output = outputs[0].mean(dim=1)
             logits = self.nsp_head(output)
         elif 'XLNet' in self.model_class:

@@ -12,7 +12,7 @@ from joblib import Parallel, delayed
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
+import sentencepiece
 import dataloader
 from intersentence_loader import IntersentenceDataset
 from models import models
@@ -160,8 +160,7 @@ class BiasEvaluator():
             mask_idxs = (input_ids == self.MASK_TOKEN_IDX)
 
             # get the probabilities
-            output = model(input_ids, attention_mask=attention_mask,
-                           token_type_ids=token_type_ids)[0].softmax(dim=-1)
+            output = model(input_ids, attention_mask=attention_mask)[0].softmax(dim=-1)
 
             output = output[mask_idxs]
             output = output.index_select(1, next_token).diag()
@@ -222,7 +221,7 @@ class BiasEvaluator():
                 token_type_ids = token_type_ids.to(self.device)
                 attention_mask = attention_mask.to(self.device)
                 outputs = model(
-                    input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
+                    input_ids, attention_mask=attention_mask)
                 if type(outputs) == tuple:
                     outputs = outputs[0]
                 if self.INTERSENTENCE_MODEL == "ModelNSP":
